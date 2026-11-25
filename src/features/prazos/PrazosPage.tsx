@@ -8,7 +8,7 @@ import { Carregando } from "@/components/TelaCarregando";
 import { useUsuario } from "@/features/auth/AuthContext";
 import { useEntregas, usePeriodos, SITUACAO, type Periodo, type SituacaoEntrega } from "@/features/notificacoes/api";
 import { dataCurta, hojeISO, inicioDaSemana, somarDias } from "@/features/planejamentos/dominio";
-import { formatarData, usePerfis, useRecarregar } from "@/lib/consultas";
+import { formatarData, useEtapas, usePerfis, useRecarregar } from "@/lib/consultas";
 import { mensagemDeErro, verificar } from "@/lib/erros";
 import { podeAlterarConfiguracao } from "@/lib/papeis";
 import { supabase } from "@/lib/supabase";
@@ -20,6 +20,12 @@ interface Form {
   inicio: string;
   fim: string;
   prazo: string;
+  /** null = todas as etapas */
+  etapa: number | null;
+}
+
+function diasEntre(a: string, b: string): number {
+  return Math.round((new Date(b + "T12:00").getTime() - new Date(a + "T12:00").getTime()) / 86_400_000);
 }
 
 /** Períodos de entrega e data-limite de cada um (definidos pela Direção ou Secretaria). */
@@ -28,7 +34,9 @@ export function PrazosPage() {
   const periodos = usePeriodos();
   const entregas = useEntregas();
   const perfis = usePerfis();
+  const etapas = useEtapas();
   const recarregar = useRecarregar();
+  const [filtro, setFiltro] = useState<number | "todas">("todas");
   const [form, setForm] = useState<Form | null>(null);
   const [removendo, setRemovendo] = useState<Periodo | null>(null);
 
@@ -42,40 +50,55 @@ export function PrazosPage() {
     return (Object.keys(SITUACAO) as SituacaoEntrega[]).map((s) => ({ s, n: doPeriodo.filter((e) => e.situacao === s).length }));
   };
 
+  const nomeEtapa = (id: number | null) => (id === null ? "Todas as etapas" : etapas.data?.find((e) => e.id === id)?.nome ?? "");
+  const lista = periodos.data.filter((p) => filtro === "todas" || p.etapa_id === filtro || p.etapa_id === null);
+
   function novo() {
-    // Sugestão: próxima semana sem período, com prazo na sexta anterior.
-    const ultimo = periodos.data?.[0];
-    const inicio = ultimo && ultimo.fim >= hoje ? inicioDaSemana(somarDias(ultimo.fim, 3)) : inicioDaSemana(somarDias(hoje, 7));
-    setForm({ id: null, inicio, fim: somarDias(inicio, 4), prazo: somarDias(inicio, -3) });
+    // Sugestão: o período seguinte ao último desta etapa, com a mesma duração e a mesma antecedência do prazo.
+    const etapa = filtro === "todas" ? null : filtro;
+    const ultimo = periodos.data?.find((p) => p.etapa_id === etapa);
+    if (ultimo) {
+      const inicio = inicioDaSemana(somarDias(ultimo.fim, 3));
+      setForm({ id: null, inicio, fim: somarDias(inicio, diasEntre(ultimo.inicio, ultimo.fim)), prazo: somarDias(inicio, diasEntre(ultimo.inicio, ultimo.prazo)), etapa });
+    } else {
+      const inicio = inicioDaSemana(somarDias(hoje, 7));
+      setForm({ id: null, inicio, fim: somarDias(inicio, 4), prazo: somarDias(inicio, -3), etapa });
+    }
   }
 
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 18 }}>
         <p style={{ fontSize: 13.5, color: C.inkSoft, margin: 0, maxWidth: 620, lineHeight: 1.6 }}>
-          Cadastre cada período de planejamento e a data-limite de entrega. O período conta como entregue quando o
+          Cadastre os períodos de planejamento de cada etapa e a data-limite de entrega. O período conta como entregue quando o
           professor conclui todos os dias dele. Entregas com 2 ou mais dias úteis de folga contam como{" "}
           <strong>com antecedência</strong>; no dia ou na véspera, <strong>no prazo</strong>; depois, <strong>com atraso</strong>.
         </p>
-        <button className="tv-btn tv-btn-primary" onClick={novo}>
-          <Plus size={16} /> Novo período
-        </button>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <select className="tv-input" style={{ width: "auto" }} value={filtro} onChange={(e) => setFiltro(e.target.value === "todas" ? "todas" : Number(e.target.value))} aria-label="Etapa">
+            <option value="todas">Todas as etapas</option>
+            {etapas.data?.map((e) => <option key={e.id} value={e.id}>{e.nome}</option>)}
+          </select>
+          <button className="tv-btn tv-btn-primary" onClick={novo}>
+            <Plus size={16} /> Novo período
+          </button>
+        </div>
       </div>
 
-      {periodos.data.length === 0 ? (
+      {lista.length === 0 ? (
         <EmptyState icon={CalendarDays} title="Nenhum período cadastrado." description="Sem períodos, as entregas de planejamento não são registradas nem notificadas." />
       ) : (
         <div className="tv-card" style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
             <thead>
               <tr style={{ background: "#F4F1E6", textAlign: "left" }}>
-                {["Período", "Data-limite", "Entregas", ""].map((h) => (
+                {["Período", "Etapa", "Data-limite", "Entregas", ""].map((h) => (
                   <th key={h} style={{ padding: "12px 16px", fontWeight: 600, color: C.inkSoft, fontSize: 12.5 }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {periodos.data.map((p) => {
+              {lista.map((p) => {
                 const travado = !podeAlterarConfiguracao(eu.papel, p.definido_por_nivel);
                 const atual = p.inicio <= hoje && hoje <= p.fim;
                 const qtd = contagem(p.id);
@@ -86,6 +109,7 @@ export function PrazosPage() {
                       {dataCurta(p.inicio)} – {dataCurta(p.fim)}
                       {atual && <span style={{ textTransform: "none", color: C.goldDeep, fontWeight: 600 }}> · atual</span>}
                     </td>
+                    <td style={{ padding: "12px 16px", color: C.inkSoft }}>{nomeEtapa(p.etapa_id)}</td>
                     <td style={{ padding: "12px 16px", textTransform: "capitalize", color: p.prazo < hoje ? C.inkSoft : C.ink }}>{dataCurta(p.prazo)}</td>
                     <td style={{ padding: "12px 16px" }}>
                       <span style={{ display: "flex", gap: 10, flexWrap: "wrap", fontSize: 12.5 }}>
@@ -103,7 +127,7 @@ export function PrazosPage() {
                         <span style={{ fontSize: 12, color: C.inkSoft }}>Com entregas</span>
                       ) : (
                         <span style={{ display: "inline-flex", gap: 10 }}>
-                          <button className="tv-btn-text" style={{ display: "inline-flex", gap: 4, alignItems: "center", fontSize: 12.5 }} onClick={() => setForm({ id: p.id, inicio: p.inicio, fim: p.fim, prazo: p.prazo })}>
+                          <button className="tv-btn-text" style={{ display: "inline-flex", gap: 4, alignItems: "center", fontSize: 12.5 }} onClick={() => setForm({ id: p.id, inicio: p.inicio, fim: p.fim, prazo: p.prazo, etapa: p.etapa_id })}>
                             <Pencil size={12} /> Editar
                           </button>
                           <button className="tv-btn-text-danger" style={{ display: "inline-flex", gap: 4, alignItems: "center", fontSize: 12.5 }} onClick={() => setRemovendo(p)}>
@@ -129,7 +153,7 @@ export function PrazosPage() {
           form={form}
           onCancelar={() => setForm(null)}
           onSalvar={async (f) => {
-            verificar(await supabase.rpc("salvar_periodo", { p_id: f.id as never, p_inicio: f.inicio, p_fim: f.fim, p_prazo: f.prazo }));
+            verificar(await supabase.rpc("salvar_periodo", { p_id: f.id as never, p_inicio: f.inicio, p_fim: f.fim, p_prazo: f.prazo, p_etapa: f.etapa as never }));
             await recarregar();
             setForm(null);
           }}
@@ -155,6 +179,7 @@ export function PrazosPage() {
 }
 
 function PeriodoModal({ form: inicial, onCancelar, onSalvar }: { form: Form; onCancelar: () => void; onSalvar: (f: Form) => Promise<void> }) {
+  const etapas = useEtapas();
   const [f, setF] = useState(inicial);
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -171,7 +196,7 @@ function PeriodoModal({ form: inicial, onCancelar, onSalvar }: { form: Form; onC
     }
   }
 
-  const campo = (rotulo: string, chave: keyof Omit<Form, "id">) => (
+  const campo = (rotulo: string, chave: "inicio" | "fim" | "prazo") => (
     <label style={{ display: "block", marginBottom: 14 }}>
       <span style={{ fontSize: 13, fontWeight: 600 }}>{rotulo}</span>
       <input type="date" className="tv-input" style={{ marginTop: 6 }} value={f[chave]} onChange={(e) => setF((x) => ({ ...x, [chave]: e.target.value }))} />
@@ -190,6 +215,13 @@ function PeriodoModal({ form: inicial, onCancelar, onSalvar }: { form: Form; onC
         </>
       }
     >
+      <label style={{ display: "block", marginBottom: 14 }}>
+        <span style={{ fontSize: 13, fontWeight: 600 }}>Etapa</span>
+        <select className="tv-input" style={{ marginTop: 6 }} value={f.etapa ?? ""} onChange={(e) => setF((x) => ({ ...x, etapa: e.target.value === "" ? null : Number(e.target.value) }))}>
+          <option value="">Todas as etapas</option>
+          {etapas.data?.map((e) => <option key={e.id} value={e.id}>{e.nome}</option>)}
+        </select>
+      </label>
       {campo("Primeiro dia do período", "inicio")}
       {campo("Último dia do período", "fim")}
       {campo("Data-limite de entrega", "prazo")}

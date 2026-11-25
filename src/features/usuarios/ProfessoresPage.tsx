@@ -1,4 +1,4 @@
-import { Users } from "lucide-react";
+import { Printer, Users } from "lucide-react";
 import { useState } from "react";
 import { Aviso } from "@/components/Aviso";
 import { EmptyState } from "@/components/EmptyState";
@@ -16,6 +16,7 @@ import { mensagemDeErro, verificar } from "@/lib/erros";
 import { podeGerenciarUsuario } from "@/lib/papeis";
 import { supabase } from "@/lib/supabase";
 import { useUsuario } from "@/features/auth/AuthContext";
+import { RelatorioEntregasModal } from "@/features/exportacao/RelatorioEntregasModal";
 import { C } from "@/styles/tokens";
 import { BotoesUsuario } from "./acoes";
 import { EditarVinculosModal } from "./EditarVinculosModal";
@@ -33,6 +34,7 @@ export function ProfessoresPage() {
   const [editando, setEditando] = useState<Perfil | null>(null);
   const [removendo, setRemovendo] = useState<Perfil | null>(null);
   const [senha, setSenha] = useState<Perfil | null>(null);
+  const [relatorio, setRelatorio] = useState(false);
 
   const erro = perfis.error ?? vinculos.error ?? erroCatalogo;
   if (erro) return <Aviso>{mensagemDeErro(erro)}</Aviso>;
@@ -79,6 +81,14 @@ export function ProfessoresPage() {
           </tbody>
         </table>
       </div>
+
+      {/* §9: "Imprimir Relatório" abaixo da lista de professores */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14 }}>
+        <button className="tv-btn tv-btn-primary" onClick={() => setRelatorio(true)}>
+          <Printer size={15} /> Imprimir relatório de entregas
+        </button>
+      </div>
+      {relatorio && <RelatorioEntregasModal onFechar={() => setRelatorio(false)} />}
 
       {editando && (
         <EditarVinculosModal perfil={editando} vinculosAtuais={vinculosDe(editando.id)} catalogo={catalogo} onFechar={() => setEditando(null)} />

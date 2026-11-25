@@ -359,20 +359,40 @@ A etiqueta vermelha "Atrasado" (§8.3) é só uma leitura de `entregas.situacao`
 
 ---
 
-## 7. Exportação (PDF e Word)
+## 7. Exportação (PDF e Word) — implementado na Fase 4
 
-| Documento | Conteúdo | Quem vê |
-|---|---|---|
-| Planejamento do dia | Todos os blocos de Turma + Data + Turno numa tabela, no layout dos modelos atuais da escola | conforme RLS |
-| Conteúdo programático | Conteúdo + Objetivos agregados por turma, mensal ou bimestral (§6.1) | Coordenador (etapa), Secretaria, Diretor |
-| Relatório de entregas | Por professor, em ordem alfabética: no prazo / atrasados / não entregues (§9) | Coordenador (etapa), Secretaria, Diretor |
-| Painel de cursos | Por trilha, aula e usuário: concluiu / em andamento / não iniciou (§10.4) | Administrador, Diretor, Secretaria |
+Formato baseado nos modelos da escola (`PLANO 24 a 28 de agosto.docx`, `PL 24 08 a 04 09.docx`):
+A4 deitada, logotipo, "PLANEJAMENTO DE AULA", turma e período; **uma tabela por dia e turno** com as colunas
+Data · Conteúdo · Objetivos de aprendizagem (Habilidades) · Estratégias de Ensino · Atividades propostas ·
+Avaliação · Recursos — e, só na Educação Infantil, uma 8ª coluna **Linguagens do Amor**.
 
-Os dados vêm de **views SQL** (`vw_conteudo_programatico`, `vw_relatorio_entregas`,
-`vw_painel_cursos`) que já respeitam a RLS — o mesmo relatório mostra só a etapa para o
-Coordenador e a escola inteira para a Secretaria, sem código duplicado.
+| Documento | Conteúdo | Quem | Formatos |
+|---|---|---|---|
+| Planejamento do período | Blocos de todos os professores da turma + momentos de rotina da grade (Lanche, Saída…) + aulas da grade ainda sem planejamento ("-") + dias sem aula; período = semana, período de entrega ou datas escolhidas | quem vê a turma | PDF, Word |
+| Conteúdo programático | Conteúdo e Objetivos por disciplina, mensal, bimestral (mês escolhido + seguinte) ou datas; **inclui planejamentos "excluídos"** na remoção de professor | Gestão (turmas do escopo) | PDF, Word |
+| Relatório de entregas | Por professor, em ordem alfabética: com antecedência, no prazo, com atraso e não entregues (prazo vencido sem entrega), para os prazos de um intervalo | Coordenação (etapa), Secretaria, Direção, Admin | PDF |
 
-Os modelos atuais da escola (Word) devem ser usados como referência visual para o layout exportado.
+- Os dados vêm das tabelas (respeitando a RLS) e de duas funções do servidor, `conteudo_programatico`
+  e `relatorio_entregas`, que precisam ver os blocos "excluídos" e calcular os não entregues.
+- Um modelo intermediário único (`src/features/exportacao/modelo.ts`) é desenhado em PDF (`pdfmake`) e Word
+  (`docx`), então os dois formatos saem iguais. As bibliotecas são carregadas só na hora de exportar.
+- O logotipo oficial foi extraído dos modelos (`public/logo-tom-da-vida.png`).
+- No PDF, setas e emojis (sem desenho na fonte) viram equivalentes em texto; o Word mantém o original.
+
+### Grade, disciplinas e prazos (decisões de 25/11/2026)
+
+- **Momentos de rotina na grade** (Lanche, Almoço, Parque, Saída…): horário sem professor (`horarios.rotulo`).
+  Aparecem no arquivo exportado; não contam para a entrega.
+- **Programa Bilíngue e Robótica** são dados por professores do sistema: viraram disciplinas. A Direção e a
+  Secretaria cadastram e renomeiam disciplinas na tela Turmas.
+- **Prazos por etapa:** cada período de entrega pertence a uma etapa (`periodos_entrega.etapa_id`; vazio =
+  todas). Períodos de etapas diferentes podem coincidir; a entrega usa o período da etapa da turma.
+
+### Fuso horário
+
+A escola fica em **Campo Grande (MS), UTC-4**. Todas as contas de data no banco usam `public.fuso_escola()`
+(`America/Campo_Grande`): data da entrega, prazos vencidos e datas nas mensagens. Antes da Fase 4 estava
+`America/Sao_Paulo` (UTC-3), o que fazia uma entrega às 23h30 contar como do dia seguinte.
 
 ---
 
@@ -430,7 +450,7 @@ Turmas, Professores, Solicitações e Conteúdo viram componentes dentro de `fea
 | **1. Acesso e hierarquia** ✅ | Cadastro, aprovação, papéis, vínculos, travas, modal de confirmação, log de auditoria, reset de senha | §2–5, §11 |
 | **2. Turmas e planejamentos** ✅ | Turmas, editor de planejamento com blocos, status, Linguagem do Amor, notas, histórico | §6, §6.2, §6.3 |
 | **3. Salvamento à prova de falhas** ✅ | Fila offline, banner, indicador de salvamento, conflito | §7 |
-| **4. Exportação e relatórios** | PDF/Word do planejamento, conteúdo programático, relatório de entregas | §6.1, §9 |
+| **4. Exportação e relatórios** ✅ | PDF/Word do planejamento, conteúdo programático, relatório de entregas | §6.1, §9 |
 | **5. Prazos e e-mails** | Configuração global, períodos, rotina diária, lembretes, etiqueta de atraso, alerta ao Coordenador | §8 |
 | **6. Universidade Corporativa** | Trilhas, aulas, upload de vídeo, desbloqueio sequencial, obrigatoriedades, painel de auditoria | §10 |
 

@@ -55,7 +55,9 @@ export function PlanejamentoDiaPage() {
   const p = dia.data;
   // Aulas da grade previstas para esta data e turno.
   const previstos = (horarios.data ?? []).filter(
-    (h) => vigenteEm(h, data) && h.dia_semana === diaDaSemana(data) && (h.hora_inicio < "12:00" ? "matutino" : "vespertino") === turno,
+    (h): h is Horario & { professor_id: string; disciplina_id: number } =>
+      h.professor_id !== null && h.disciplina_id !== null &&
+      vigenteEm(h, data) && h.dia_semana === diaDaSemana(data) && (h.hora_inicio < "12:00" ? "matutino" : "vespertino") === turno,
   );
   const nomes = useNomes([
     ...(p?.blocos.map((b) => b.professor_id) ?? []),
@@ -86,7 +88,7 @@ export function PlanejamentoDiaPage() {
   const pendentes = previstos.filter((h) => !blocos.some((b) => b.professor_id === h.professor_id && b.disciplina_id === h.disciplina_id));
   const meusPendentes = pendentes.filter((h) => h.professor_id === eu.id);
 
-  async function planejarHorario(h: Horario) {
+  async function planejarHorario(h: Horario & { disciplina_id: number }) {
     setCriandoHorario(h.id);
     setErroHorario(null);
     try {

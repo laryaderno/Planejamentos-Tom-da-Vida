@@ -11,7 +11,7 @@ export default defineConfig({
     // Os dados vêm da cópia local das consultas (src/lib/offline/cache.ts); a API não é guardada aqui.
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.svg"],
+      includeAssets: ["favicon.svg", "logo-tom-da-vida.png"],
       manifest: {
         name: "Planejamento de Aulas — Escola Tom da Vida",
         short_name: "Tom da Vida",
@@ -41,6 +41,6 @@ export default defineConfig({
   },
   test: {
     include: ["src/**/*.test.ts", "supabase/tests/**/*.test.ts"],
-    env: { TZ: "America/Sao_Paulo" },
+    env: { TZ: "America/Campo_Grande" },
   },
 });

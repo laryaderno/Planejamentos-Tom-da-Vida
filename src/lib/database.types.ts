@@ -213,14 +213,14 @@ isOneToOne: false
                   ]
                 },"horarios": {
                   Row: {
-                    "definido_em": string,"definido_por_id": string | null,"definido_por_nivel": number,"dia_semana": number,"disciplina_id": number,"hora_fim": string,"hora_inicio": string,"id": number,"professor_id": string,"turma_id": number,"vigente_ate": string | null,"vigente_desde": string
+                    "definido_em": string,"definido_por_id": string | null,"definido_por_nivel": number,"dia_semana": number,"disciplina_id": number | null,"hora_fim": string,"hora_inicio": string,"id": number,"professor_id": string | null,"rotulo": string | null,"turma_id": number,"vigente_ate": string | null,"vigente_desde": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "definido_em"?: string,"definido_por_id"?: string | null,"definido_por_nivel"?: number,"dia_semana": number,"disciplina_id": number,"hora_fim": string,"hora_inicio": string,"id"?: never,"professor_id": string,"turma_id": number,"vigente_ate"?: string | null,"vigente_desde": string
+                    "definido_em"?: string,"definido_por_id"?: string | null,"definido_por_nivel"?: number,"dia_semana": number,"disciplina_id"?: number | null,"hora_fim": string,"hora_inicio": string,"id"?: never,"professor_id"?: string | null,"rotulo"?: string | null,"turma_id": number,"vigente_ate"?: string | null,"vigente_desde": string
                   }
                   Update: {
-                    "definido_em"?: string,"definido_por_id"?: string | null,"definido_por_nivel"?: number,"dia_semana"?: number,"disciplina_id"?: number,"hora_fim"?: string,"hora_inicio"?: string,"id"?: never,"professor_id"?: string,"turma_id"?: number,"vigente_ate"?: string | null,"vigente_desde"?: string
+                    "definido_em"?: string,"definido_por_id"?: string | null,"definido_por_nivel"?: number,"dia_semana"?: number,"disciplina_id"?: number | null,"hora_fim"?: string,"hora_inicio"?: string,"id"?: never,"professor_id"?: string | null,"rotulo"?: string | null,"turma_id"?: number,"vigente_ate"?: string | null,"vigente_desde"?: string
                   }
                   Relationships: [
                     {
@@ -349,14 +349,14 @@ isOneToOne: false
                   ]
                 },"periodos_entrega": {
                   Row: {
-                    "definido_em": string,"definido_por_id": string | null,"definido_por_nivel": number,"fim": string,"id": number,"inicio": string,"prazo": string
+                    "definido_em": string,"definido_por_id": string | null,"definido_por_nivel": number,"etapa_id": number | null,"fim": string,"id": number,"inicio": string,"prazo": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "definido_em"?: string,"definido_por_id"?: string | null,"definido_por_nivel"?: number,"fim": string,"id"?: never,"inicio": string,"prazo": string
+                    "definido_em"?: string,"definido_por_id"?: string | null,"definido_por_nivel"?: number,"etapa_id"?: number | null,"fim": string,"id"?: never,"inicio": string,"prazo": string
                   }
                   Update: {
-                    "definido_em"?: string,"definido_por_id"?: string | null,"definido_por_nivel"?: number,"fim"?: string,"id"?: never,"inicio"?: string,"prazo"?: string
+                    "definido_em"?: string,"definido_por_id"?: string | null,"definido_por_nivel"?: number,"etapa_id"?: number | null,"fim"?: string,"id"?: never,"inicio"?: string,"prazo"?: string
                   }
                   Relationships: [
                     {
@@ -364,6 +364,12 @@ isOneToOne: false
       columns: ["definido_por_id"]
 isOneToOne: false
       referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "periodos_entrega_etapa_id_fkey"
+      columns: ["etapa_id"]
+isOneToOne: false
+      referencedRelation: "etapas"
       referencedColumns: ["id"]
     }
                   ]
@@ -484,6 +490,11 @@ isOneToOne: false
 "avaliar_entregas_do_periodo":
 { Args: { "p_periodo": number }; Returns: undefined
                            },
+"conteudo_programatico":
+{ Args: { "p_fim": string,"p_inicio": string,"p_turma": number }; Returns: {
+              "conteudo": string,"data": string,"disciplina": string,"habilidades": (Database["public"]['Enums']["inteligencia"])[],"hora_inicio": string,"objetivos": string,"professor": string,"turno": Database["public"]['Enums']["turno"]
+            }[]
+                           },
 "coordena_usuario":
 { Args: { "p_alvo": string }; Returns: boolean
                            },
@@ -554,6 +565,9 @@ isOneToOne: false
 "periodo_concluido":
 { Args: { "p_periodo": number,"p_professor": string,"p_turma": number }; Returns: boolean
                            },
+"periodo_vale_para_turma":
+{ Args: { "p_periodo": number,"p_turma": number }; Returns: boolean
+                           },
 "pode_aprovar":
 { Args: { "p_etapa": number,"p_papel": Database["public"]['Enums']["papel"] }; Returns: boolean
                            },
@@ -583,6 +597,11 @@ isOneToOne: false
                            },
 "registrar_entrega":
 { Args: { "p_entregue_em": string,"p_notificar": boolean,"p_periodo": number,"p_professor": string,"p_turma": number }; Returns: undefined
+                           },
+"relatorio_entregas":
+{ Args: { "p_fim": string,"p_inicio": string }; Returns: {
+              "antecipado": number,"atrasado": number,"nao_entregue": number,"no_prazo": number,"professor": string,"professor_id": string,"turmas": string
+            }[]
                            },
 "remover_atividade":
 { Args: { "p_id": number }; Returns: undefined
@@ -614,11 +633,14 @@ isOneToOne: false
 "salvar_dia_sem_aula":
 { Args: { "p_data": string,"p_descricao": string,"p_etapa"?: number,"p_id": number }; Returns: number
                            },
+"salvar_disciplina":
+{ Args: { "p_id": number,"p_nome": string }; Returns: number
+                           },
 "salvar_grade":
 { Args: { "p_aulas": Json,"p_turma": number,"p_vigente_desde": string }; Returns: undefined
                            },
 "salvar_periodo":
-{ Args: { "p_fim": string,"p_id": number,"p_inicio": string,"p_prazo": string }; Returns: number
+{ Args: { "p_etapa"?: number,"p_fim": string,"p_id": number,"p_inicio": string,"p_prazo": string }; Returns: number
                            },
 "salvar_turma":
 { Args: { "p_etapa": number,"p_id": number,"p_nome": string,"p_turno": Database["public"]['Enums']["turno"] }; Returns: number

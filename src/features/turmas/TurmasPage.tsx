@@ -17,10 +17,11 @@ import {
   type Turno,
 } from "@/lib/consultas";
 import { mensagemDeErro, verificar } from "@/lib/erros";
-import { podeAlterarConfiguracao, podeEditarEtapa } from "@/lib/papeis";
+import { NIVEL, podeAlterarConfiguracao, podeEditarEtapa } from "@/lib/papeis";
 import { supabase } from "@/lib/supabase";
 import { useUsuario } from "@/features/auth/AuthContext";
 import { C } from "@/styles/tokens";
+import { Disciplinas } from "./Disciplinas";
 
 interface TurmaForm {
   id: number | null;
@@ -127,6 +128,8 @@ export function TurmasPage() {
           );
         })}
       </div>
+
+      {NIVEL[eu.papel] >= NIVEL.secretaria && <Disciplinas />}
 
       {form && (
         <TurmaModal
