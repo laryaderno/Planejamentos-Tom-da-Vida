@@ -10,5 +10,6 @@ export default defineConfig({
   },
   test: {
     include: ["src/**/*.test.ts", "supabase/tests/**/*.test.ts"],
+    env: { TZ: "America/Sao_Paulo" },
   },
 });

@@ -1,9 +1,10 @@
-import { Archive, ArrowLeft, ArrowRight, CalendarDays, Folder } from "lucide-react";
+import { Archive, ArrowLeft, ArrowRight, Folder } from "lucide-react";
 import { useState } from "react";
 import { EmptyState } from "@/components/EmptyState";
 import { useUsuario } from "@/features/auth/AuthContext";
 import { useTurmas, useVinculos } from "@/lib/consultas";
-import { ATIVIDADES_POR_TURMA, PLANEJAMENTOS_ARQUIVADOS } from "@/mocks/dados";
+import { ATIVIDADES_POR_TURMA } from "@/mocks/dados";
+import { PlanejamentosArquivados } from "./PlanejamentosArquivados";
 import { C } from "@/styles/tokens";
 
 export function BancoAtividadesPage() {
@@ -19,7 +20,6 @@ export function BancoAtividadesPage() {
   const turma = turmas.find((t) => String(t.id) === String(turmaId));
   const dados = turmaId ? ATIVIDADES_POR_TURMA[Number(turmaId)] : null;
   const pastaAtual = dados?.pastas.find((p) => p.tema === tema);
-  const planejamentosArquivados = PLANEJAMENTOS_ARQUIVADOS.filter((p) => String(p.turmaId) === turmaId);
 
   function selectTurma(id: string) {
     setTurmaId(id);
@@ -90,24 +90,7 @@ export function BancoAtividadesPage() {
           <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "-4px 0 12px", maxWidth: 620, lineHeight: 1.5 }}>
             Planejamentos de professores que saíram da escola e foram mantidos na remoção. Somente leitura.
           </p>
-          {planejamentosArquivados.length === 0 ? (
-            <EmptyState
-              icon={CalendarDays}
-              title={`Nenhum planejamento arquivado em ${turma?.nome}.`}
-              description="Ao remover um professor, quem remove pode escolher manter os planejamentos dele; eles aparecem aqui."
-            />
-          ) : (
-            <div className="tv-card" style={{ overflow: "hidden" }}>
-              {planejamentosArquivados.map((p, i) => (
-                <div key={p.id} style={{ padding: "12px 16px", borderTop: i === 0 ? "none" : `1px solid ${C.border}` }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: C.ink, margin: "0 0 4px" }}>{p.conteudo}</p>
-                  <p style={{ fontSize: 12.5, color: C.inkSoft, margin: 0 }}>
-                    {p.data} · {p.turno} · {p.professorNome} · arquivado em {p.arquivadoEm}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
+          {turma && <PlanejamentosArquivados turmaId={turma.id} turmaNome={turma.nome} />}
         </>
       )}
 

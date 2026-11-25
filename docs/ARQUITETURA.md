@@ -181,25 +181,31 @@ arquivado_em      timestamptz NULL      -- autor removido com "Manter": vai para
 excluido_em       timestamptz NULL      -- autor removido com "Excluir": some das telas, fica nos relatórios
 ```
 
-### 3.3 Prazos e notificações
+### 3.3 Prazos, entregas e notificações
 
 ```sql
-config_escola     (id = 1,                                  -- linha única (prazo global, §8.1)
-                   frequencia,          -- 'semanal' | 'quinzenal' | 'mensal'
-                   data_base,
-                   intervalo_lembrete_dias, dias_antecedencia_lembrete,
-                   definido_por_id, definido_por_nivel, definido_em)
-
-periodos_entrega  (id, inicio, fim, prazo)                  -- gerados a partir de config_escola
-
-entregas          (id, periodo_entrega_id, professor_id, turma_id,
-                   situacao,            -- 'no_prazo' | 'atrasado' | 'nao_entregue' | 'pendente'
-                   entregue_em NULL)
-                  -- calculada pelo job diário; base do Relatório de Entregas (§9)
-
-emails_enviados   (id, tipo, destinatario_id, referencia, enviado_em)
-                  -- evita e-mail duplicado e serve de prova de envio
+periodos_entrega  (id, inicio, fim, prazo, definido_por_*)   -- cadastrados pela Direção/Secretaria; trava em cascata
+entregas          (id, periodo_id, professor_id, turma_id, entregue_em, situacao)
+                  -- situacao: 'antecipado' | 'no_prazo' | 'atrasado'; uma por professor × turma × período
+notificacoes      (id, usuario_id, tipo, titulo, mensagem, link, entrega_id, criada_em, lida_em)
 ```
+
+**Entrega (decisões de 25/11/2026):**
+
+- O período conta como **entregue** quando o professor conclui (verde) todos os dias dele naquela turma:
+  o **Regente**, todos os dias úteis (seg–sex) do período; o **especialista**, todos os blocos que criou
+  no período (ao menos um). Feriados ainda não são considerados.
+- **Situação:** 2 ou mais dias úteis antes da data-limite = *com antecedência*; no dia ou na véspera =
+  *no prazo*; depois = *com atraso*.
+- A verificação roda no banco, no momento em que um bloco fica verde. Voltar a amarelo e concluir de novo
+  não gera nova entrega. Um período cadastrado depois registra as entregas que já estavam concluídas
+  (com a data em que ficaram verdes), sem notificar retroativamente.
+- **Notificados:** o próprio professor, os Coordenadores da etapa e os Diretores.
+- O sininho do menu se chama **Notificações**: junta os avisos de entrega e as solicitações de cadastro,
+  com contador de não lidas.
+
+Ainda para a Fase 5: lembretes e alertas por e-mail (§8.2, §8.4), etiqueta "Atrasado" para quem ainda não
+entregou após o prazo, e feriados.
 
 ### 3.4 Universidade Corporativa
 
@@ -373,7 +379,7 @@ Turmas, Professores, Solicitações e Conteúdo viram componentes dentro de `fea
 |---|---|---|
 | **0. Fundação** ✅ | TypeScript, rotas, Supabase local, migrações iniciais, extração do protótipo em componentes *(deploy de staging pendente)* | — |
 | **1. Acesso e hierarquia** ✅ | Cadastro, aprovação, papéis, vínculos, travas, modal de confirmação, log de auditoria, reset de senha | §2–5, §11 |
-| **2. Turmas e planejamentos** | Turmas, editor de planejamento com blocos, status, Linguagem do Amor, notas, histórico | §6, §6.2, §6.3 |
+| **2. Turmas e planejamentos** ✅ | Turmas, editor de planejamento com blocos, status, Linguagem do Amor, notas, histórico | §6, §6.2, §6.3 |
 | **3. Salvamento à prova de falhas** | Fila offline, banner, indicador de salvamento, conflito | §7 |
 | **4. Exportação e relatórios** | PDF/Word do planejamento, conteúdo programático, relatório de entregas | §6.1, §9 |
 | **5. Prazos e e-mails** | Configuração global, períodos, rotina diária, lembretes, etiqueta de atraso, alerta ao Coordenador | §8 |
@@ -391,11 +397,11 @@ da fase indicada.
 
 | # | Pergunta | Proposta | Fase |
 |---|---|---|---|
-| D1 | O status (cinza/amarelo/verde) é do planejamento inteiro ou de cada bloco? Com Regente e especialistas no mesmo dia, cada um precisa marcar o seu. | Status por bloco; status do dia derivado | 2 |
-| D2 | O que conta como "entregue" para o prazo? Status verde? Todos os planejamentos do período? | Entregue = todos os blocos do professor no período verdes até o prazo | 5 |
-| D3 | O protótipo tem **prazos por etapa/turma com dois modos** (automático e manual); a v2 diz que o prazo é **global**. Qual vale? | Seguir a v2 (global); manter a tabela pronta para exceções futuras | 5 |
+| D1 | O status (cinza/amarelo/verde) é do planejamento inteiro ou de cada bloco? Com Regente e especialistas no mesmo dia, cada um precisa marcar o seu. | ✅ **Decidido:** status por bloco; o status do dia é derivado (verde só quando todos os blocos estão verdes) | 2 |
+| D2 | O que conta como "entregue" para o prazo? | ✅ **Decidido:** o período conta como entregue quando o professor conclui todos os dias dele na turma (Regente: todos os dias úteis; especialista: todos os blocos que criou). Ver §3.3 | 5 |
+| D3 | O protótipo tem **prazos por etapa/turma com dois modos**; a v2 diz que o prazo é **global**. Qual vale? | ✅ **Decidido:** global para a escola, com cada período (início, fim, data-limite) cadastrado pela Direção ou Secretaria | 5 |
 | D4 | O protótipo tem um **Banco de Atividades** (aprovação de atividades por tema) que não existe na v2. Continua no escopo? | ✅ **Decidido:** continua; ganha a seção *Planejamentos* (ver D6). Falta definir o fluxo de aprovação de atividades | 7 |
-| D5 | Turno pertence à turma (como no protótipo) ou ao planejamento (como na v2: Data + Turno)? | Ao planejamento, com turno padrão vindo da turma | 2 |
+| D5 | Turno pertence à turma (como no protótipo) ou ao planejamento (como na v2: Data + Turno)? | ✅ **Decidido:** ao planejamento, com turno padrão vindo da turma | 2 |
 | D6 | Professor removido: o que acontece com os planejamentos dele? | ✅ **Decidido:** quem remove escolhe *Manter* (vão para Banco de Atividades → Planejamentos) ou *Excluir* (some das telas, mas continua no conteúdo programático e no relatório de entregas; ver §3.2) | 1 |
 | D7 | Ano letivo: turmas e planejamentos são arquivados na virada do ano? | Campo `ano_letivo` em turmas; filtro por ano | 2 |
 | D8 | Onde hospedar os vídeos? Supabase Storage é simples, mas não faz streaming adaptativo. | Bunny Stream (baixo custo, bom no Brasil) | 6 |

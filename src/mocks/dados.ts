@@ -3,14 +3,8 @@
  * Saem quando os módulos correspondentes forem implementados — não acrescente
  * lógica de negócio aqui. Os ids de turma seguem a ordem do supabase/seed.sql.
  */
-import type { PastaAtividades, PlanejamentoResumo } from "@/types/dominio";
+import type { PastaAtividades } from "@/types/dominio";
 
-/** Planejamentos de professores já removidos que foram mantidos (decisão D6). */
-export const PLANEJAMENTOS_ARQUIVADOS: PlanejamentoResumo[] = [
-  { id: 1, professorNome: "Sofia Ramos", turmaId: 3, data: "18/11/2026", turno: "Matutino", conteudo: "Cores primárias com tinta guache", arquivadoEm: "21/11/2026" },
-  { id: 2, professorNome: "Sofia Ramos", turmaId: 3, data: "19/11/2026", turno: "Matutino", conteudo: "Contação de história: A Lagarta Comilona", arquivadoEm: "21/11/2026" },
-  { id: 3, professorNome: "Sofia Ramos", turmaId: 4, data: "19/11/2026", turno: "Vespertino", conteudo: "Formas geométricas no cotidiano", arquivadoEm: "21/11/2026" },
-];
 
 // Repositório de atividades aprovadas por turma (protótipo v1), organizado em pastas por tema.
 // Chave = id da turma em supabase/seed.sql.

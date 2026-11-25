@@ -12,7 +12,8 @@ import { useUsuario } from "@/features/auth/AuthContext";
 import { C } from "@/styles/tokens";
 import { AprovarModal } from "./AprovarModal";
 
-export function SolicitacoesPage() {
+/** Lista de cadastros pendentes. `compacto`: usada dentro da página de Notificações. */
+export function SolicitacoesPage({ compacto = false }: { compacto?: boolean }) {
   const eu = useUsuario();
   const perfis = usePerfis();
   const { catalogo, erro: erroCatalogo } = useCatalogo();
@@ -31,6 +32,7 @@ export function SolicitacoesPage() {
     .sort((a, b) => a.criado_em.localeCompare(b.criado_em));
 
   if (pendentes.length === 0) {
+    if (compacto) return <p style={{ fontSize: 13, color: C.inkSoft, margin: 0 }}>Nenhuma solicitação pendente.</p>;
     return (
       <EmptyState
         icon={Bell}

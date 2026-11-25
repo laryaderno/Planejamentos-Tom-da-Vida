@@ -68,10 +68,10 @@ export function VisaoGeralPage() {
 
         <DashboardCard
           icon={Bell}
-          title="Solicitações"
+          title="Solicitações de cadastro"
           description={pendencias === 0 ? "Nenhum cadastro aguardando você" : "Cadastros aguardando sua aprovação"}
           badge={pendencias > 0 ? `${pendencias} ${pendencias === 1 ? "pendente" : "pendentes"}` : null}
-          onClick={() => navigate("/solicitacoes")}
+          onClick={() => navigate("/notificacoes")}
         />
 
         <DashboardCard
