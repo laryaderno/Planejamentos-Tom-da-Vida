@@ -1,20 +1,66 @@
-<<<<<<< HEAD
-# React + Vite
+# Planejamentos Tom da Vida
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Sistema web de planejamento de aulas e Universidade Corporativa da Escola Tom da Vida.
 
-Currently, two official plugins are available:
+- Especificação: *Especificação de Requisitos v2.0* (documento da escola)
+- Arquitetura, modelo de dados e fases: [docs/ARQUITETURA.md](docs/ARQUITETURA.md)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+React 19 + TypeScript + Vite · React Router · TanStack Query · Supabase (Postgres, Auth, RLS) · Vitest
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Rodando localmente
 
-## Expanding the Oxlint configuration
+Requisitos: Node 20+ e, para o banco local, Docker Desktop aberto.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
-=======
-# Planejamentos-Tom-da-Vida
->>>>>>> 0c607550ddf80b2d46437a8984c85a020ad253f8
+```bash
+npm install
+npm run dev          # http://localhost:5173
+```
+
+Sem banco configurado, o app roda com os dados de exemplo do protótipo e login simulado
+(qualquer e-mail e senha entram como Administrador).
+
+### Banco local (Supabase)
+
+```bash
+npm run db:start     # sobe Postgres, Auth e Studio em Docker; mostra URL e anon key
+cp .env.example .env.local   # cole a anon key exibida
+npm run db:reset     # recria o banco: aplica supabase/migrations e supabase/seed.sql
+npm run db:types     # gera src/lib/database.types.ts a partir do banco
+```
+
+Studio (interface do banco): http://127.0.0.1:54323
+
+Para criar o primeiro Administrador: cadastre um usuário em *Authentication* no Studio e rode no
+*SQL Editor*:
+
+```sql
+update public.perfis set papel = 'administrador', status = 'ativo' where email = 'seu@email.com';
+```
+
+## Scripts
+
+| Comando | O que faz |
+|---|---|
+| `npm run dev` | Servidor de desenvolvimento |
+| `npm run build` | Verificação de tipos + build de produção em `dist/` |
+| `npm run typecheck` | Só a verificação de tipos |
+| `npm run lint` | Oxlint |
+| `npm test` | Testes (front e regras do banco — os do banco rodam em Postgres em memória, sem Docker) |
+
+## Estrutura
+
+```
+src/
+  app/           rotas, layout (AppShell), navegação
+  features/      uma pasta por módulo (auth, turmas, usuarios, prazos, relatorios...)
+  components/    componentes compartilhados
+  lib/           cliente Supabase, papéis e níveis hierárquicos
+  mocks/         dados de exemplo do protótipo (saem a partir da Fase 1)
+  styles/        paleta e CSS global
+supabase/
+  migrations/    SQL versionado: tabelas, RLS, gatilhos
+  seed.sql       etapas, disciplinas e turmas de exemplo
+  tests/         testes das regras do banco
+```
