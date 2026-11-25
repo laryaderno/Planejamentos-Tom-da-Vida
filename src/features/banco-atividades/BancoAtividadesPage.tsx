@@ -1,19 +1,25 @@
 import { Archive, ArrowLeft, ArrowRight, CalendarDays, Folder } from "lucide-react";
 import { useState } from "react";
 import { EmptyState } from "@/components/EmptyState";
-import { ATIVIDADES_POR_TURMA } from "@/mocks/dados";
-import { useDadosPrototipo } from "@/mocks/DadosPrototipoContext";
+import { useUsuario } from "@/features/auth/AuthContext";
+import { useTurmas, useVinculos } from "@/lib/consultas";
+import { ATIVIDADES_POR_TURMA, PLANEJAMENTOS_ARQUIVADOS } from "@/mocks/dados";
 import { C } from "@/styles/tokens";
 
 export function BancoAtividadesPage() {
-  const { turmas, planejamentos } = useDadosPrototipo();
+  const eu = useUsuario();
+  const todasTurmas = useTurmas().data ?? [];
+  const vinculos = useVinculos().data ?? [];
+  // Professor vê só as turmas em que tem vínculo; os demais, o que a RLS liberar.
+  const minhasTurmas = new Set(vinculos.filter((v) => v.usuario_id === eu.id).map((v) => v.turma_id));
+  const turmas = eu.papel === "professor" ? todasTurmas.filter((t) => minhasTurmas.has(t.id)) : todasTurmas;
   const [turmaId, setTurmaId] = useState("");
   const [tema, setTema] = useState<string | null>(null);
 
   const turma = turmas.find((t) => String(t.id) === String(turmaId));
   const dados = turmaId ? ATIVIDADES_POR_TURMA[Number(turmaId)] : null;
   const pastaAtual = dados?.pastas.find((p) => p.tema === tema);
-  const planejamentosArquivados = planejamentos.filter((p) => p.arquivadoEm && !p.excluidoEm && String(p.turmaId) === turmaId);
+  const planejamentosArquivados = PLANEJAMENTOS_ARQUIVADOS.filter((p) => String(p.turmaId) === turmaId);
 
   function selectTurma(id: string) {
     setTurmaId(id);
@@ -32,11 +38,11 @@ export function BancoAtividadesPage() {
         >
           <option value="">Selecione uma turma</option>
           {turmas.map((t) => (
-            <option key={t.id} value={t.id}>{t.nome} — {t.etapa}</option>
+            <option key={t.id} value={t.id}>{t.nome}</option>
           ))}
         </select>
         <p style={{ fontSize: 12, color: C.inkSoft, margin: "8px 0 0" }}>
-          Como Diretor(a), você vê todas as turmas. Professores veem apenas as turmas às quais têm acesso.
+          {eu.papel === "professor" ? "Você vê as turmas em que leciona." : "Você vê as turmas do seu escopo."} Conteúdo de exemplo até o módulo do banco de atividades ser implementado.
         </p>
       </div>
 

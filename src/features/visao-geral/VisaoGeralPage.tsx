@@ -1,27 +1,32 @@
 import type { LucideIcon } from "lucide-react";
-import { AlertTriangle, Archive, BarChart3, GraduationCap, Users } from "lucide-react";
+import { AlertTriangle, Archive, BarChart3, Bell, GraduationCap, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router";
-import { SOLICITACOES_PENDENTES, totalAtividadesAprovadas } from "@/mocks/dados";
-import { useDadosPrototipo } from "@/mocks/DadosPrototipoContext";
+import { useUsuario } from "@/features/auth/AuthContext";
+import { useEtapas, usePerfis, useTurmas } from "@/lib/consultas";
+import { podeAprovar } from "@/lib/papeis";
+import { totalAtividadesAprovadas } from "@/mocks/dados";
 import { C } from "@/styles/tokens";
-import { ETAPAS } from "@/types/dominio";
 
 export function VisaoGeralPage() {
-  const { turmas, professores } = useDadosPrototipo();
+  const eu = useUsuario();
   const navigate = useNavigate();
-  const etapaCounts = ETAPAS.map((etapa) => ({
-    etapa,
-    curto: etapa.replace("Ensino ", "").replace("Educação ", ""),
-    count: turmas.filter((t) => t.etapa === etapa).length,
+  const etapas = useEtapas().data ?? [];
+  const turmas = useTurmas().data ?? [];
+  const perfis = usePerfis().data ?? [];
+  const etapaCounts = etapas.map((e) => ({
+    etapa: e.nome,
+    curto: e.nome.replace("Ensino ", "").replace("Educação ", ""),
+    count: turmas.filter((t) => t.etapa_id === e.id).length,
   }));
-  const pendencias = SOLICITACOES_PENDENTES.length;
+  const pendencias = perfis.filter((p) => p.status === "pendente" && podeAprovar(eu, p.papel, p.etapa_solicitada_id)).length;
+  const professoresAtivos = perfis.filter((p) => p.status === "ativo" && p.papel === "professor").length;
   const totalAtividades = totalAtividadesAprovadas();
 
   return (
     <div>
       <p style={{ fontSize: 14, color: C.inkSoft, margin: "-8px 0 22px", maxWidth: 560, lineHeight: 1.6 }}>
-        Acompanhe suas turmas, sua equipe e o banco de atividades em um só lugar.
+        Olá, {eu.nome.split(" ")[0]}. Acompanhe suas turmas, sua equipe e o banco de atividades em um só lugar.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
@@ -29,7 +34,6 @@ export function VisaoGeralPage() {
           icon={GraduationCap}
           title="Turmas"
           description="Crie turmas e distribua professores entre elas."
-          badge={pendencias > 0 ? `${pendencias} pendências` : null}
           onClick={() => navigate("/turmas")}
         >
           <div style={{ display: "flex", gap: 22, flexWrap: "wrap" }}>
@@ -45,7 +49,7 @@ export function VisaoGeralPage() {
         <DashboardCard
           icon={BarChart3}
           title="Entregas no prazo"
-          description="Atualizado hoje às 19:46"
+          description="Exemplo — dados reais na Fase 5"
           onClick={() => navigate("/prazos")}
         >
           <p className="tv-serif" style={{ fontSize: 30, fontWeight: 600, color: C.ink, margin: "4px 0 8px" }}>78%</p>
@@ -57,15 +61,23 @@ export function VisaoGeralPage() {
 
         <DashboardCard
           icon={Users}
-          title="Equipe escolar"
-          description={`${professores.length} cadastros ativos`}
+          title="Professores"
+          description={`${professoresAtivos} ${professoresAtivos === 1 ? "professor ativo" : "professores ativos"}`}
           onClick={() => navigate("/professores")}
+        />
+
+        <DashboardCard
+          icon={Bell}
+          title="Solicitações"
+          description={pendencias === 0 ? "Nenhum cadastro aguardando você" : "Cadastros aguardando sua aprovação"}
+          badge={pendencias > 0 ? `${pendencias} ${pendencias === 1 ? "pendente" : "pendentes"}` : null}
+          onClick={() => navigate("/solicitacoes")}
         />
 
         <DashboardCard
           icon={Archive}
           title="Banco de atividades"
-          description={`${totalAtividades} atividades aprovadas`}
+          description={`${totalAtividades} atividades aprovadas (exemplo)`}
           onClick={() => navigate("/banco")}
         />
       </div>

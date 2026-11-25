@@ -371,8 +371,8 @@ Turmas, Professores, Solicitações e Conteúdo viram componentes dentro de `fea
 
 | Fase | Entrega | Seções |
 |---|---|---|
-| **0. Fundação** | TypeScript, rotas, Supabase local, migrações iniciais, deploy de staging, extração do protótipo em componentes | — |
-| **1. Acesso e hierarquia** | Cadastro, aprovação, papéis, vínculos, travas, modal de confirmação, log de auditoria, reset de senha | §2–5, §11 |
+| **0. Fundação** ✅ | TypeScript, rotas, Supabase local, migrações iniciais, extração do protótipo em componentes *(deploy de staging pendente)* | — |
+| **1. Acesso e hierarquia** ✅ | Cadastro, aprovação, papéis, vínculos, travas, modal de confirmação, log de auditoria, reset de senha | §2–5, §11 |
 | **2. Turmas e planejamentos** | Turmas, editor de planejamento com blocos, status, Linguagem do Amor, notas, histórico | §6, §6.2, §6.3 |
 | **3. Salvamento à prova de falhas** | Fila offline, banner, indicador de salvamento, conflito | §7 |
 | **4. Exportação e relatórios** | PDF/Word do planejamento, conteúdo programático, relatório de entregas | §6.1, §9 |

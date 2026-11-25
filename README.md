@@ -18,8 +18,8 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-Sem banco configurado, o app roda com os dados de exemplo do protótipo e login simulado
-(qualquer e-mail e senha entram como Administrador).
+O app precisa do Supabase (local ou na nuvem) configurado no `.env.local`; sem ele, mostra uma
+tela explicando o que falta.
 
 ### Banco local (Supabase)
 
@@ -30,10 +30,28 @@ npm run db:reset     # recria o banco: aplica supabase/migrations e supabase/see
 npm run db:types     # gera src/lib/database.types.ts a partir do banco
 ```
 
-Studio (interface do banco): http://127.0.0.1:54323
+- Studio (interface do banco): http://127.0.0.1:54323
+- Caixa de e-mails local (redefinição de senha etc.): http://127.0.0.1:54324
 
-Para criar o primeiro Administrador: cadastre um usuário em *Authentication* no Studio e rode no
-*SQL Editor*:
+#### Usuários de teste (só no banco local)
+
+O `npm run db:reset` cria estes usuários a partir de `supabase/seed_usuarios_dev.sql`.
+Senha de todos: `senha123`.
+
+| E-mail | Papel | Situação |
+|---|---|---|
+| admin@tomdavida.test | Administrador | ativo |
+| diretora@tomdavida.test | Diretor | ativo |
+| secretaria@tomdavida.test | Secretaria Acadêmica | ativo |
+| coord.infantil@tomdavida.test | Coordenador (Educação Infantil) | ativo |
+| marina@tomdavida.test | Professor (Jardim 1, regente) | ativo |
+| ingles@tomdavida.test | Professor (6º Ano A, Inglês) | ativo |
+| joao@tomdavida.test | Professor (Educação Infantil) | pendente |
+| carla@tomdavida.test | Coordenador (Fundamental I) | pendente |
+
+#### Primeiro Administrador em produção
+
+Em produção não há seed. Cadastre-se pela tela de cadastro e rode no *SQL Editor* do Supabase:
 
 ```sql
 update public.perfis set papel = 'administrador', status = 'ativo' where email = 'seu@email.com';

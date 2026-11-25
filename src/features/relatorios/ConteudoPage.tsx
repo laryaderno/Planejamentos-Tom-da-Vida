@@ -1,9 +1,9 @@
 import { BookOpen } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { useDadosPrototipo } from "@/mocks/DadosPrototipoContext";
+import { useTurmas } from "@/lib/consultas";
 
 export function ConteudoPage() {
-  const { turmas } = useDadosPrototipo();
+  const turmas = useTurmas().data ?? [];
   return (
     <EmptyState
       icon={BookOpen}

@@ -52,6 +52,9 @@ html, body { margin: 0; background: var(--tv-paper); }
   background: var(--tv-gold); border-radius: 0 3px 3px 0;
 }
 
+/* "Meu perfil" no menu só aparece na tela estreita; no desktop fica no rodapé do menu. */
+.tv-nav-perfil { display: none; }
+
 .tv-card { background: var(--tv-card); border: 1px solid var(--tv-border); border-radius: 10px; }
 .tv-dashboard-card { transition: border-color .15s, transform .1s; }
 .tv-dashboard-card:hover, .tv-dashboard-card:focus-visible { border-color: var(--tv-gold); }
@@ -77,4 +80,5 @@ html, body { margin: 0; background: var(--tv-paper); }
   .tv-sidebar-nav { flex-direction: row !important; gap: 4px; }
   .tv-nav-item.active::before { display: none; }
   .tv-sidebar-footer { display: none !important; }
+  .tv-nav-perfil { display: flex; order: -1; }
 }
