@@ -31,7 +31,11 @@ npm run db:types     # gera src/lib/database.types.ts a partir do banco
 ```
 
 - Studio (interface do banco): http://127.0.0.1:54323
-- Caixa de e-mails local (redefinição de senha etc.): http://127.0.0.1:54324
+- Caixa de e-mails local (redefinição de senha, lembretes e alertas): http://127.0.0.1:54324
+- Rotina diária de e-mails (local): `npm run db:start` já serve a função; para disparar na hora, use
+  *Prazos e ciclos > Enviar agora* ou
+  `curl -X POST http://127.0.0.1:54321/functions/v1/rotina-diaria -H "x-segredo-rotina: segredo-local-somente-desenvolvimento"`
+  (com `-d '{"hoje":"2026-12-05"}'` para simular outro dia).
 
 #### Usuários de teste (só no banco local)
 
@@ -58,6 +62,26 @@ Em produção não há seed. Cadastre-se pela tela de cadastro e rode no *SQL Ed
 
 ```sql
 update public.perfis set papel = 'administrador', status = 'ativo' where email = 'seu@email.com';
+```
+
+#### E-mails em produção (Fase 5)
+
+1. Crie uma conta no [Resend](https://resend.com), verifique o domínio da escola (SPF/DKIM) e gere uma chave.
+2. Configure os segredos e publique a função:
+
+```bash
+npx supabase secrets set RESEND_API_KEY=... EMAIL_REMETENTE=nao-responda@escolatomdavida.com.br SEGREDO_ROTINA=<texto-longo-aleatório> URL_APP=https://<endereço-do-sistema>
+```
+
+```bash
+npx supabase functions deploy rotina-diaria --no-verify-jwt
+```
+
+3. No *SQL Editor*, guarde no Vault o endereço da função e o mesmo segredo, para o agendamento diário:
+
+```sql
+select vault.create_secret('https://<projeto>.supabase.co/functions/v1/rotina-diaria', 'url_rotina_diaria');
+select vault.create_secret('<o mesmo SEGREDO_ROTINA>', 'segredo_rotina_diaria');
 ```
 
 ## Scripts

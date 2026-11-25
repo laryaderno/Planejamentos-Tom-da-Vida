@@ -221,8 +221,10 @@ aceita professor com vínculo na turma e disciplina, sem sobreposição na turma
 turmas. Cada versão vale "a partir de" uma data; a anterior termina na véspera. O professor vê *Meus
 horários*; no dia, os horários previstos ainda sem bloco aparecem com o botão "Planejar este horário".
 
-Ainda para a Fase 5: lembretes e alertas por e-mail (§8.2, §8.4) e a etiqueta "Atrasado" para quem ainda não
-entregou após o prazo.
+**Etiqueta "Atrasado" (§8.3, Fase 5):** vermelha, ao lado do nome do professor no resumo do período da semana
+e em cada bloco do dia. Aparece quando a entrega saiu com atraso ou quando o prazo venceu sem entrega. É só uma
+leitura de `entregas` + `periodos_entrega` (`src/features/planejamentos/atraso.tsx`); todos que veem a turma veem
+as entregas dela (política de leitura de `entregas`: o próprio professor ou `pode_ver_turma`).
 
 ### 3.3.1 Banco de atividades
 
@@ -344,18 +346,25 @@ digitação ──► fila no navegador (IndexedDB) ──(1,5 s sem digitar)─
 
 ---
 
-## 6. Rotinas agendadas (§8)
+## 6. Rotinas agendadas e e-mails (§8) — implementado na Fase 5
 
-Um job `pg_cron` diário (ex.: 06:00, horário de Brasília) chama a Edge Function `rotina-diaria`:
+Todo dia às 7h (11:00 UTC) um job `pg_cron` (`rotina-diaria`, migração `20261205000100_agendamento.sql`) faz
+um `net.http_post` para a Edge Function `rotina-diaria`, com o cabeçalho `x-segredo-rotina`. A URL e o segredo
+ficam no Vault (`url_rotina_diaria`, `segredo_rotina_diaria`); sem eles, o job não chama nada.
 
-1. Gera os próximos `periodos_entrega` a partir de `config_escola`, se necessário.
-2. Atualiza `entregas` (no prazo / atrasado / não entregue).
-3. Envia **lembretes** aos professores conforme o intervalo configurado (§8.2).
-4. No dia seguinte ao prazo, envia ao Coordenador da etapa:
-   "TURMA [X] DE PROFESSOR [Y] – PLANEJAMENTO NÃO IDENTIFICADO" (§8.4).
-5. Grava tudo em `emails_enviados` (impede duplicidade se o job rodar duas vezes).
+1. A função chama `preparar_envios()` (só `service_role`), que enfileira em `emails` e em `notificacoes`:
+   - **Lembretes** ao professor nos dias configurados antes do prazo (`config_notificacoes.lembrete_dias`,
+     padrão 3 dias antes e no dia), um e-mail por professor e período listando as turmas ainda não entregues.
+   - **Alerta à Coordenação** da etapa (sem Coordenação, à Secretaria) para cada turma não entregue:
+     "TURMA [X] DE PROFESSOR [Y] – PLANEJAMENTO NÃO IDENTIFICADO". Sai no dia seguinte ao prazo; se a rotina
+     falhar, recupera prazos vencidos há até 7 dias.
+   - Cada envio tem uma `chave` única: rodar duas vezes no mesmo dia não duplica nada.
+2. Envia o que está pendente (e tenta de novo até 3 vezes o que falhou): pelo **Resend** se houver
+   `RESEND_API_KEY`; pelo **Mailpit** no ambiente local (`MAILPIT_URL`); sem nenhum, marca como "simulado".
 
-A etiqueta vermelha "Atrasado" (§8.3) é só uma leitura de `entregas.situacao`.
+Em *Prazos e ciclos > E-mails automáticos* a Direção e a Secretaria ligam/desligam os e-mails, escolhem os dias
+de lembrete e o alerta, veem os últimos 50 e-mails e podem rodar a rotina na hora ("Enviar agora", que chama a
+mesma função com o login do usuário; só Direção, Secretaria e Administração).
 
 ---
 
@@ -451,7 +460,7 @@ Turmas, Professores, Solicitações e Conteúdo viram componentes dentro de `fea
 | **2. Turmas e planejamentos** ✅ | Turmas, editor de planejamento com blocos, status, Linguagem do Amor, notas, histórico | §6, §6.2, §6.3 |
 | **3. Salvamento à prova de falhas** ✅ | Fila offline, banner, indicador de salvamento, conflito | §7 |
 | **4. Exportação e relatórios** ✅ | PDF/Word do planejamento, conteúdo programático, relatório de entregas | §6.1, §9 |
-| **5. Prazos e e-mails** | Configuração global, períodos, rotina diária, lembretes, etiqueta de atraso, alerta ao Coordenador | §8 |
+| **5. Prazos e e-mails** ✅ | Configuração global, períodos, rotina diária, lembretes, etiqueta de atraso, alerta ao Coordenador | §8 |
 | **6. Universidade Corporativa** | Trilhas, aulas, upload de vídeo, desbloqueio sequencial, obrigatoriedades, painel de auditoria | §10 |
 
 Fases 1–3 formam o **MVP**: professores já podem planejar com segurança. A fase 3 pode ser

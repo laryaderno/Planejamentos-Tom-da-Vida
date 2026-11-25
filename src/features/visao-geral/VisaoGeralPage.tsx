@@ -1,12 +1,30 @@
 import type { LucideIcon } from "lucide-react";
 import { AlertTriangle, Archive, BarChart3, Bell, GraduationCap, Users } from "lucide-react";
 import type { ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { useUsuario } from "@/features/auth/AuthContext";
 import { useEtapas, usePerfis, useTurmas } from "@/lib/consultas";
 import { podeAprovar } from "@/lib/papeis";
 import { useAtividades } from "@/features/atividades/api";
+import { hojeISO, somarDias } from "@/features/planejamentos/dominio";
+import { verificar } from "@/lib/erros";
+import { supabase } from "@/lib/supabase";
 import { C } from "@/styles/tokens";
+
+/** Entregas cujo prazo venceu nos últimos 30 dias: quantas saíram no prazo (ou antes). */
+function useEntregasNoPrazo() {
+  const hoje = hojeISO();
+  return useQuery({
+    queryKey: ["relatorio-entregas", "30-dias", hoje],
+    queryFn: async () => {
+      const linhas = verificar(await supabase.rpc("relatorio_entregas", { p_inicio: somarDias(hoje, -30), p_fim: somarDias(hoje, -1) }));
+      const emDia = linhas.reduce((n, l) => n + l.antecipado + l.no_prazo, 0);
+      const total = linhas.reduce((n, l) => n + l.antecipado + l.no_prazo + l.atrasado + l.nao_entregue, 0);
+      return { emDia, total };
+    },
+  });
+}
 
 export function VisaoGeralPage() {
   const eu = useUsuario();
@@ -21,6 +39,8 @@ export function VisaoGeralPage() {
   }));
   const pendencias = perfis.filter((p) => p.status === "pendente" && podeAprovar(eu, p.papel, p.etapa_solicitada_id)).length;
   const professoresAtivos = perfis.filter((p) => p.status === "ativo" && p.papel === "professor").length;
+  const noPrazo = useEntregasNoPrazo();
+  const percentual = noPrazo.data?.total ? Math.round((noPrazo.data.emDia / noPrazo.data.total) * 100) : 0;
   const totalAtividades = (useAtividades().data ?? []).filter((a) => a.status === "aprovada").length;
 
   return (
@@ -49,14 +69,22 @@ export function VisaoGeralPage() {
         <DashboardCard
           icon={BarChart3}
           title="Entregas no prazo"
-          description="Exemplo — dados reais na Fase 5"
+          description="Planejamentos com prazo nos últimos 30 dias"
           onClick={() => navigate("/prazos")}
         >
-          <p className="tv-serif" style={{ fontSize: 30, fontWeight: 600, color: C.ink, margin: "4px 0 8px" }}>78%</p>
-          <div style={{ height: 6, borderRadius: 3, background: C.border, overflow: "hidden" }}>
-            <div style={{ width: "78%", height: "100%", background: C.gold }} />
-          </div>
-          <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "8px 0 0" }}>18 de 23 turmas com o planejamento em dia esta semana</p>
+          {noPrazo.data && noPrazo.data.total > 0 ? (
+            <>
+              <p className="tv-serif" style={{ fontSize: 30, fontWeight: 600, color: C.ink, margin: "4px 0 8px" }}>{percentual}%</p>
+              <div style={{ height: 6, borderRadius: 3, background: C.border, overflow: "hidden" }}>
+                <div style={{ width: `${percentual}%`, height: "100%", background: C.gold }} />
+              </div>
+              <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "8px 0 0" }}>
+                {noPrazo.data.emDia} de {noPrazo.data.total} {noPrazo.data.total === 1 ? "entrega esperada saiu" : "entregas esperadas saíram"} no prazo ou antes
+              </p>
+            </>
+          ) : (
+            <p style={{ fontSize: 12.5, color: C.inkSoft, margin: 0 }}>{noPrazo.data ? "Nenhum prazo venceu nos últimos 30 dias." : "Carregando…"}</p>
+          )}
         </DashboardCard>
 
         <DashboardCard
