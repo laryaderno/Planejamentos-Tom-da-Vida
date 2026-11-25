@@ -13,6 +13,7 @@ import { mensagemDeErro, verificar } from "@/lib/erros";
 import { podeAlterarConfiguracao } from "@/lib/papeis";
 import { supabase } from "@/lib/supabase";
 import { DiasSemAula } from "./DiasSemAula";
+import { EmailsAutomaticos } from "./EmailsAutomaticos";
 import { C } from "@/styles/tokens";
 
 interface Form {
@@ -143,6 +144,10 @@ export function PrazosPage() {
           </table>
         </div>
       )}
+
+      <div style={{ marginTop: 32 }}>
+        <EmailsAutomaticos />
+      </div>
 
       <div style={{ marginTop: 32 }}>
         <DiasSemAula />

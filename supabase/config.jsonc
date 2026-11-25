@@ -460,9 +460,17 @@
     // The Deno major version to use.
     "deno_version": 2,
 
-    // "secrets": {
-    //   "secret_key": "env(SECRET_VALUE)"
-    // },
+    // Valores só do ambiente LOCAL (em produção use `supabase secrets set`, ver README).
+    "secrets": {
+      "MAILPIT_URL": "http://supabase_inbucket_planejamento-aulas:8025",
+      "SEGREDO_ROTINA": "segredo-local-somente-desenvolvimento",
+      "URL_APP": "http://localhost:5173"
+    },
+  },
+
+  // A rotina diária faz a própria verificação (segredo do agendamento ou usuário da gestão).
+  "functions": {
+    "rotina-diaria": { "verify_jwt": false }
   },
 
   "analytics": {

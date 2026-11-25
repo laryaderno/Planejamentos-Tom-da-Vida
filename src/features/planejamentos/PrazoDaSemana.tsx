@@ -2,19 +2,29 @@ import { CalendarClock } from "lucide-react";
 import { useUsuario } from "@/features/auth/AuthContext";
 import { useEntregas, usePeriodos } from "@/features/notificacoes/api";
 import { SituacaoChip } from "@/features/notificacoes/SituacaoChip";
-import { formatarData } from "@/lib/consultas";
+import { formatarData, useVinculos } from "@/lib/consultas";
 import { C } from "@/styles/tokens";
 import { useNomes } from "./api";
+import { EtiquetaAtrasado, situacaoDoProfessor } from "./atraso";
 import { dataCurta, hojeISO } from "./dominio";
 
-/** Período de entrega que cobre a semana exibida, com a data-limite e as entregas da turma. */
+/**
+ * Período de entrega que cobre a semana: data-limite e a situação de cada
+ * professor da turma (com a etiqueta "Atrasado", §8.3).
+ */
 export function PrazoDaSemana({ turmaId, etapaId, inicio, fim }: { turmaId: number; etapaId: number; inicio: string; fim: string }) {
   const eu = useUsuario();
   const periodos = usePeriodos();
   const entregas = useEntregas();
+  const vinculos = useVinculos();
   const periodo = periodos.data?.find((p) => p.inicio <= fim && p.fim >= inicio && (p.etapa_id === null || p.etapa_id === etapaId));
-  const daTurma = (entregas.data ?? []).filter((e) => periodo && e.periodo_id === periodo.id && e.turma_id === turmaId);
-  const nomes = useNomes(daTurma.map((e) => e.professor_id));
+
+  // Professores esperados: quem tem vínculo com a turma (o professor vê só a si mesmo).
+  const professores =
+    eu.papel === "professor"
+      ? [eu.id]
+      : [...new Set((vinculos.data ?? []).filter((v) => v.turma_id === turmaId).map((v) => v.usuario_id))];
+  const nomes = useNomes(professores);
 
   if (!periodos.data) return null;
   if (!periodo) {
@@ -25,11 +35,17 @@ export function PrazoDaSemana({ turmaId, etapaId, inicio, fim }: { turmaId: numb
     );
   }
 
-  const minha = daTurma.find((e) => e.professor_id === eu.id);
   const vencido = periodo.prazo < hojeISO();
+  const situacoes = professores
+    .map((id) => {
+      const s = situacaoDoProfessor(periodo, entregas.data, id, turmaId);
+      const e = entregas.data?.find((x) => x.periodo_id === periodo.id && x.professor_id === id && x.turma_id === turmaId);
+      return { id, nome: id === eu.id ? "Você" : (nomes.data?.get(id) ?? "…"), s, entregueEm: e?.entregue_em };
+    })
+    .sort((a, b) => a.nome.localeCompare(b.nome));
 
   return (
-    <div className="tv-card" style={{ padding: "12px 14px", marginBottom: 14, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+    <div className="tv-card" style={{ padding: "12px 14px", marginBottom: 14 }}>
       <span style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13.5 }}>
         <CalendarClock size={16} color={C.goldDeep} />
         <span>
@@ -37,27 +53,28 @@ export function PrazoDaSemana({ turmaId, etapaId, inicio, fim }: { turmaId: numb
           <strong style={{ textTransform: "capitalize", color: vencido ? C.red : C.ink }}>{dataCurta(periodo.prazo)}</strong>
         </span>
       </span>
-
-      {eu.papel === "professor" ? (
-        minha ? (
-          <span style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 12.5, color: C.inkSoft }}>
-            <SituacaoChip situacao={minha.situacao} /> entregue em {formatarData(minha.entregue_em, true)}
+      <div style={{ display: "flex", gap: "6px 16px", flexWrap: "wrap", marginTop: 8, fontSize: 12.5, color: C.inkSoft }}>
+        {situacoes.length === 0 && <span>Nenhum professor vinculado a esta turma.</span>}
+        {situacoes.map((x) => (
+          <span key={x.id} style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
+            {x.nome}
+            {x.s === "nao_entregue" ? (
+              <>
+                <EtiquetaAtrasado titulo="Prazo vencido e planejamento não entregue" />
+                {eu.papel === "professor" && <span>conclua todos os seus dias do período para entregar</span>}
+              </>
+            ) : x.s === "pendente" ? (
+              <span style={{ fontStyle: "italic" }}>{eu.papel === "professor" ? "conclua todos os seus dias do período para entregar" : "ainda não entregou"}</span>
+            ) : (
+              <>
+                <SituacaoChip situacao={x.s} />
+                {x.s === "atrasado" && <EtiquetaAtrasado />}
+                {x.entregueEm && <span>em {formatarData(x.entregueEm, true)}</span>}
+              </>
+            )}
           </span>
-        ) : (
-          <span style={{ fontSize: 12.5, color: vencido ? C.red : C.inkSoft }}>
-            {vencido ? "Prazo vencido — " : ""}Conclua todos os seus dias do período para entregar.
-          </span>
-        )
-      ) : (
-        <span style={{ display: "flex", gap: 10, flexWrap: "wrap", fontSize: 12.5, color: C.inkSoft }}>
-          {daTurma.length === 0 && "Nenhuma entrega desta turma ainda."}
-          {daTurma.map((e) => (
-            <span key={e.id} style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
-              {nomes.data?.get(e.professor_id) ?? "…"} <SituacaoChip situacao={e.situacao} />
-            </span>
-          ))}
-        </span>
-      )}
+        ))}
+      </div>
     </div>
   );
 }

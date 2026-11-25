@@ -150,8 +150,11 @@ describe("notificações", () => {
     expect(await b.contar("select * from public.notificacoes where usuario_id = $1 and lida_em is null", [u.diretor])).toBe(2); // Marina e Lucas
   });
 
-  it("professor vê só as próprias entregas; coordenação vê as da etapa", async () => {
-    expect(await b.como(u.ingles!, () => b.contar("select * from public.entregas"))).toBe(1);
+  it("professor vê as entregas das turmas em que leciona (etiqueta Atrasado, §8.3), não as de outras", async () => {
+    // Lucas leciona no Jardim 1: vê a própria entrega e a da Marina
+    expect(await b.como(u.ingles!, () => b.contar("select * from public.entregas"))).toBe(2);
+    // Beatriz (1º Ano A) não vê as entregas do Jardim 1
+    expect(await b.como(u.reg1ano!, () => b.contar("select * from public.entregas where turma_id = $1", [JARDIM1]))).toBe(0);
     expect(await b.como(u.coordEI!, () => b.contar("select * from public.entregas"))).toBe(2);
     expect(await b.como(u.coordF1!, () => b.contar("select * from public.entregas"))).toBe(1);
   });

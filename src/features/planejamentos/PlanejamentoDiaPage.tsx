@@ -19,6 +19,7 @@ import { dataPorExtenso, hora, somarDias, statusDoDia } from "./dominio";
 import { HistoricoModal } from "./HistoricoModal";
 import { Notas } from "./Notas";
 import { useMinhasTurmas } from "./PlanejamentosPage";
+import { EtiquetaAtrasado, useAtraso } from "./atraso";
 import { StatusChip } from "./StatusChip";
 
 const TURNOS: Turno[] = ["matutino", "vespertino"];
@@ -37,6 +38,7 @@ export function PlanejamentoDiaPage() {
   const vinculos = useVinculos();
   const dia = usePlanejamentoDia(turmaId, data, turno);
   const qc = useQueryClient();
+  const estaAtrasado = useAtraso();
   const [historico, setHistorico] = useState<Bloco | null>(null);
   const [removendo, setRemovendo] = useState<Bloco | null>(null);
 
@@ -201,7 +203,10 @@ export function PlanejamentoDiaPage() {
                   {nomeDisciplina(b.disciplina_id)}
                   {!meu && <span style={{ fontWeight: 400, color: C.inkSoft }}> · {hora(b.hora_inicio)}–{hora(b.hora_fim)}</span>}
                 </p>
-                <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "2px 0 0" }}>{nome(b.professor_id)}</p>
+                <p style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 12.5, color: C.inkSoft, margin: "2px 0 0" }}>
+                  {nome(b.professor_id)}
+                  {!b.arquivado_em && estaAtrasado(turma, b.professor_id, data) && <EtiquetaAtrasado />}
+                </p>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 {b.arquivado_em && (

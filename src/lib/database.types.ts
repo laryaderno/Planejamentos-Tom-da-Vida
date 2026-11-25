@@ -105,6 +105,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"config_notificacoes": {
+                  Row: {
+                    "alerta_coordenacao": boolean,"definido_em": string,"definido_por_id": string | null,"definido_por_nivel": number,"emails_ativos": boolean,"id": number,"lembrete_dias": (number)[]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "alerta_coordenacao"?: boolean,"definido_em"?: string,"definido_por_id"?: string | null,"definido_por_nivel"?: number,"emails_ativos"?: boolean,"id"?: number,"lembrete_dias"?: (number)[]
+                  }
+                  Update: {
+                    "alerta_coordenacao"?: boolean,"definido_em"?: string,"definido_por_id"?: string | null,"definido_por_nivel"?: number,"emails_ativos"?: boolean,"id"?: number,"lembrete_dias"?: (number)[]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "config_notificacoes_definido_por_id_fkey"
+      columns: ["definido_por_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"dias_sem_aula": {
                   Row: {
                     "data": string,"definido_em": string,"definido_por_id": string | null,"definido_por_nivel": number,"descricao": string,"etapa_id": number | null,"id": number
@@ -144,6 +164,26 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"emails": {
+                  Row: {
+                    "assunto": string,"chave": string,"criado_em": string,"destinatario_id": string,"email": string,"enviado_em": string | null,"erro": string | null,"id": number,"link": string | null,"nome": string,"status": string,"tentativas": number,"texto": string,"tipo": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "assunto": string,"chave": string,"criado_em"?: string,"destinatario_id": string,"email": string,"enviado_em"?: string | null,"erro"?: string | null,"id"?: never,"link"?: string | null,"nome": string,"status"?: string,"tentativas"?: number,"texto": string,"tipo": string
+                  }
+                  Update: {
+                    "assunto"?: string,"chave"?: string,"criado_em"?: string,"destinatario_id"?: string,"email"?: string,"enviado_em"?: string | null,"erro"?: string | null,"id"?: never,"link"?: string | null,"nome"?: string,"status"?: string,"tentativas"?: number,"texto"?: string,"tipo"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "emails_destinatario_id_fkey"
+      columns: ["destinatario_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"entregas": {
                   Row: {
@@ -291,14 +331,14 @@ isOneToOne: false
                   ]
                 },"notificacoes": {
                   Row: {
-                    "criada_em": string,"entrega_id": number | null,"id": number,"lida_em": string | null,"link": string | null,"mensagem": string,"tipo": string,"titulo": string,"usuario_id": string
+                    "chave": string | null,"criada_em": string,"entrega_id": number | null,"id": number,"lida_em": string | null,"link": string | null,"mensagem": string,"tipo": string,"titulo": string,"usuario_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "criada_em"?: string,"entrega_id"?: number | null,"id"?: never,"lida_em"?: string | null,"link"?: string | null,"mensagem": string,"tipo": string,"titulo": string,"usuario_id": string
+                    "chave"?: string | null,"criada_em"?: string,"entrega_id"?: number | null,"id"?: never,"lida_em"?: string | null,"link"?: string | null,"mensagem": string,"tipo": string,"titulo": string,"usuario_id": string
                   }
                   Update: {
-                    "criada_em"?: string,"entrega_id"?: number | null,"id"?: never,"lida_em"?: string | null,"link"?: string | null,"mensagem"?: string,"tipo"?: string,"titulo"?: string,"usuario_id"?: string
+                    "chave"?: string | null,"criada_em"?: string,"entrega_id"?: number | null,"id"?: never,"lida_em"?: string | null,"link"?: string | null,"mensagem"?: string,"tipo"?: string,"titulo"?: string,"usuario_id"?: string
                   }
                   Relationships: [
                     {
@@ -507,6 +547,9 @@ isOneToOne: false
 "dias_uteis_entre":
 { Args: { "a": string,"b": string,"p_etapa"?: number }; Returns: number
                            },
+"enfileirar":
+{ Args: { "p_assunto": string,"p_chave": string,"p_destinatario": string,"p_link": string,"p_texto": string,"p_tipo": string,"p_titulo_notificacao": string }; Returns: boolean
+                           },
 "exigir_direcao_ou_secretaria":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
@@ -514,6 +557,9 @@ isOneToOne: false
 { Args: { "p_ano": number }; Returns: {
               "data": string,"descricao": string
             }[]
+                           },
+"fuso_escola":
+{ Args: Record<PropertyKey, never>; Returns: string
                            },
 "gravar_vinculos":
 { Args: { "p_usuario": string,"p_vinculos": Json }; Returns: undefined
@@ -559,6 +605,11 @@ isOneToOne: false
 "notificar":
 { Args: { "p_link": string,"p_mensagem": string,"p_tipo": string,"p_titulo": string,"p_usuario": string }; Returns: undefined
                            },
+"pares_esperados":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "etapa_id": number,"professor": string,"turma": string,"turma_id": number,"usuario_id": string
+            }[]
+                           },
 "pascoa":
 { Args: { "p_ano": number }; Returns: string
                            },
@@ -585,6 +636,9 @@ isOneToOne: false
                            },
 "pode_ver_turma":
 { Args: { "p_turma": number }; Returns: boolean
+                           },
+"preparar_envios":
+{ Args: { "p_hoje"?: string }; Returns: number
                            },
 "propor_atividade":
 { Args: { "p_bloco": number,"p_caminho": string,"p_nome": string,"p_tamanho": number,"p_tema": string,"p_tipo": string,"p_titulo": string }; Returns: number
@@ -629,6 +683,9 @@ isOneToOne: false
                            },
 "salvar_bloco":
 { Args: { "p_campos": Json,"p_id": number,"p_versao": number }; Returns: Json
+                           },
+"salvar_config_notificacoes":
+{ Args: { "p_alerta": boolean,"p_ativos": boolean,"p_dias": (number)[] }; Returns: undefined
                            },
 "salvar_dia_sem_aula":
 { Args: { "p_data": string,"p_descricao": string,"p_etapa"?: number,"p_id": number }; Returns: number
