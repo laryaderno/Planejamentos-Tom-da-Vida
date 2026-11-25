@@ -5,13 +5,24 @@ import { supabase } from "@/lib/supabase";
 
 export type Horario = Tables<"horarios">;
 
-/** Aula da grade no formato aceito por `salvar_grade`. */
+/**
+ * Horário da grade no formato aceito por `salvar_grade`: aula (professor e
+ * disciplina) ou momento de rotina (só `rotulo`, ex.: Lanche, Saída).
+ */
 export interface AulaGrade {
   dia_semana: number;
   hora_inicio: string;
   hora_fim: string;
-  disciplina_id: number;
-  professor_id: string;
+  disciplina_id: number | null;
+  professor_id: string | null;
+  rotulo?: string | null;
+}
+
+/** Sugestões para os momentos de rotina (aparecem nos modelos da escola). */
+export const ROTINAS = ["Acolhida", "Lanche", "Almoço", "Parque", "Recreio", "Saída"];
+
+export function ehRotina(a: Pick<AulaGrade, "rotulo">): boolean {
+  return a.rotulo !== null && a.rotulo !== undefined;
 }
 
 export const DIAS_SEMANA = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"] as const;

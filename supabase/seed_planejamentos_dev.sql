@@ -61,8 +61,11 @@ begin
     return;
   end if;
   for d in 1..5 loop
-    insert into public.horarios (turma_id, dia_semana, hora_inicio, hora_fim, disciplina_id, professor_id, vigente_desde)
-    values (v_jardim, d, '07:30', '11:30', v_poli, v_marina, v_seg);
+    insert into public.horarios (turma_id, dia_semana, hora_inicio, hora_fim, disciplina_id, professor_id, rotulo, vigente_desde) values
+      (v_jardim, d, '07:30', '08:20', v_poli, v_marina, null, v_seg),
+      (v_jardim, d, '08:20', '08:40', null, null, 'Lanche', v_seg),
+      (v_jardim, d, '08:40', '11:00', v_poli, v_marina, null, v_seg),
+      (v_jardim, d, '11:00', '11:15', null, null, 'Saída', v_seg);
   end loop;
   insert into public.horarios (turma_id, dia_semana, hora_inicio, hora_fim, disciplina_id, professor_id, vigente_desde) values
     (v_6ano, 1, '13:30', '14:20', v_ing, v_lucas, v_seg),

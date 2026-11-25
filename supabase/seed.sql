@@ -8,7 +8,8 @@ insert into public.etapas (nome, ordem, exige_linguagem_amor) values
 
 insert into public.disciplinas (nome) values
   ('Polivalente (Regente)'), ('Língua Portuguesa'), ('Matemática'), ('Ciências'),
-  ('História'), ('Geografia'), ('Inglês'), ('Arte'), ('Educação Física');
+  ('História'), ('Geografia'), ('Inglês'), ('Arte'), ('Educação Física'),
+  ('Programa Bilíngue'), ('Robótica');
 
 -- Turmas do protótipo
 insert into public.turmas (etapa_id, nome, turno_padrao)

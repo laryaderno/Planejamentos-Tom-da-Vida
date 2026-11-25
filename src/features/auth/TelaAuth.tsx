@@ -29,11 +29,11 @@ export function TelaAuth({
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 24 }}>
           <div
             style={{
-              width: 52, height: 52, borderRadius: "50%", background: C.sidebar,
+              width: 84, height: 84, borderRadius: "50%", background: "#fff", padding: 4,
               display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14, overflow: "hidden",
             }}
           >
-            <img src={LOGO_URL} alt="Logo Escola Tom da Vida" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img src={LOGO_URL} alt="Logo Escola Tom da Vida" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
           </div>
           <h1 className="tv-serif" style={{ fontSize: 21, fontWeight: 600, color: C.ink, textAlign: "center", margin: 0 }}>
             Sistema de Planejamento de Aulas

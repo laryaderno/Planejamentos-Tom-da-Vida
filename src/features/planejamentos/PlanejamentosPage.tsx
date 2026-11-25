@@ -1,9 +1,11 @@
-import { CalendarDays, CalendarOff, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { CalendarDays, CalendarOff, ChevronLeft, ChevronRight, FileDown, Plus } from "lucide-react";
+import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { Aviso } from "@/components/Aviso";
 import { EmptyState } from "@/components/EmptyState";
 import { Carregando } from "@/components/TelaCarregando";
 import { useUsuario } from "@/features/auth/AuthContext";
+import { ExportarPlanejamentoModal } from "@/features/exportacao/ExportarPlanejamentoModal";
 import { useDiasSemAula } from "@/features/prazos/DiasSemAula";
 import { ROTULO_TURNO, useEtapas, useTurmas, useVinculos, type Turma } from "@/lib/consultas";
 import { mensagemDeErro } from "@/lib/erros";
@@ -36,6 +38,7 @@ const DIAS_UTEIS = 5;
 export function PlanejamentosPage() {
   const eu = useUsuario();
   const [params, setParams] = useSearchParams();
+  const [exportando, setExportando] = useState(false);
   const { turmas, erro } = useMinhasTurmas();
   const etapas = useEtapas();
   const diasSemAula = useDiasSemAula();
@@ -89,10 +92,16 @@ export function PlanejamentosPage() {
           {semana !== inicioDaSemana(hoje) && (
             <button className="tv-btn-text" onClick={() => ir({ semana: hoje })}>Hoje</button>
           )}
+          {turma && (
+            <button className="tv-btn tv-btn-secondary" style={{ marginLeft: 6 }} onClick={() => setExportando(true)}>
+              <FileDown size={15} /> Exportar
+            </button>
+          )}
         </div>
       </div>
+      {exportando && turma && <ExportarPlanejamentoModal turma={turma} semana={semana} onFechar={() => setExportando(false)} />}
 
-      {turma && <PrazoDaSemana turmaId={turma.id} inicio={semana} fim={fim} />}
+      {turma && <PrazoDaSemana turmaId={turma.id} etapaId={turma.etapa_id} inicio={semana} fim={fim} />}
 
       {planejamentos.error && <Aviso>{mensagemDeErro(planejamentos.error)}</Aviso>}
       {!planejamentos.data && !planejamentos.error && <Carregando />}

@@ -12,13 +12,13 @@ import { mensagemDeErro, verificar } from "@/lib/erros";
 import { podeAlterarConfiguracao, podeEditarEtapa } from "@/lib/papeis";
 import { supabase } from "@/lib/supabase";
 import { C } from "@/styles/tokens";
-import { DIAS_SEMANA, ordenarAulas, useHorariosTurma, vigenteEm, type AulaGrade } from "./api";
+import { DIAS_SEMANA, ehRotina, ordenarAulas, ROTINAS, useHorariosTurma, vigenteEm, type AulaGrade } from "./api";
 
 type AulaEditavel = AulaGrade & { chave: number };
 let proximaChave = 1;
 
 function chaveAula(a: AulaGrade) {
-  return `${a.dia_semana}|${hora(a.hora_inicio)}|${hora(a.hora_fim)}|${a.disciplina_id}|${a.professor_id}`;
+  return `${a.dia_semana}|${hora(a.hora_inicio)}|${hora(a.hora_fim)}|${a.disciplina_id}|${a.professor_id}|${a.rotulo ?? ""}`;
 }
 
 /** Grade horária de cada turma (Coordenação na sua etapa, Secretaria, Direção). */
@@ -51,8 +51,14 @@ export function GradeHorariaPage() {
   const travada = definidor ? !podeAlterarConfiguracao(eu.papel, definidor.definido_por_nivel) : false;
   const podeEditar = podeEditarEtapa(eu, turma.etapa_id) && !travada;
 
-  const nomeProf = (id: string) => perfis.data?.find((p) => p.id === id)?.nome ?? "—";
-  const nomeDisc = (id: number) => disciplinas.data.find((d) => d.id === id)?.nome ?? "—";
+  const nomeProf = (id: string | null) => perfis.data?.find((p) => p.id === id)?.nome ?? "—";
+  // Quem definiu a grade (o nome pode não estar visível, ex.: Coordenação não vê o perfil da Direção).
+  const quemDefiniu = (h: { definido_por_id: string | null; definido_por_nivel: number }) => {
+    const nome = perfis.data?.find((p) => p.id === h.definido_por_id)?.nome;
+    if (nome) return `por ${nome}`;
+    return h.definido_por_nivel >= 40 ? "pela Direção" : h.definido_por_nivel >= 30 ? "pela Secretaria Acadêmica" : "pela Coordenação";
+  };
+  const nomeDisc = (id: number | null) => disciplinas.data.find((d) => d.id === id)?.nome ?? "—";
   const vincTurma = vinculos.data.filter((v) => v.turma_id === turma.id && v.disciplina_id);
   const disciplinasDaTurma = [...new Set(vincTurma.map((v) => v.disciplina_id!))];
   const professoresDe = (disc: number) => [...new Set(vincTurma.filter((v) => v.disciplina_id === disc).map((v) => v.usuario_id))];
@@ -71,7 +77,7 @@ export function GradeHorariaPage() {
         if (a.chave !== chave) return a;
         const nova = { ...a, [campo]: valor };
         // trocar a disciplina pode exigir trocar o professor
-        if (campo === "disciplina_id" && !professoresDe(Number(valor)).includes(nova.professor_id)) {
+        if (campo === "disciplina_id" && !professoresDe(Number(valor)).includes(nova.professor_id ?? "")) {
           nova.professor_id = professoresDe(Number(valor))[0] ?? "";
         }
         return nova;
@@ -79,18 +85,21 @@ export function GradeHorariaPage() {
     });
   }
 
-  function adicionar(dia: number) {
+  function adicionar(dia: number, tipo: "aula" | "rotina") {
     setEdicao((e) => {
       if (!e) return e;
       const doDia = ordenarAulas(e.aulas.filter((a) => a.dia_semana === dia));
       const inicio = doDia.length ? doDia[doDia.length - 1]!.hora_fim : turma!.turno_padrao === "matutino" ? "07:30" : "13:00";
-      const disc = disciplinasDaTurma[0] ?? 0;
-      return {
-        ...e,
-        aulas: [...e.aulas, { chave: proximaChave++, dia_semana: dia, hora_inicio: inicio, hora_fim: somarMin(inicio, 50), disciplina_id: disc, professor_id: professoresDe(disc)[0] ?? "" }],
-      };
+      const disc = disciplinasDaTurma[0] ?? null;
+      const nova: AulaEditavel =
+        tipo === "rotina"
+          ? { chave: proximaChave++, dia_semana: dia, hora_inicio: inicio, hora_fim: somarMin(inicio, 20), disciplina_id: null, professor_id: null, rotulo: "Lanche" }
+          : { chave: proximaChave++, dia_semana: dia, hora_inicio: inicio, hora_fim: somarMin(inicio, 50), disciplina_id: disc, professor_id: disc ? professoresDe(disc)[0] ?? null : null, rotulo: null };
+      return { ...e, aulas: [...e.aulas, nova] };
     });
   }
+
+  const rotinaSemNome = edicao?.aulas.some((a) => ehRotina(a) && !a.rotulo?.trim()) ?? false;
 
   const etapaNome = etapas.data?.find((e) => e.id === turma.etapa_id)?.nome ?? "";
 
@@ -123,7 +132,7 @@ export function GradeHorariaPage() {
         )}
         {!edicao && travada && definidor && (
           <span style={{ marginLeft: "auto", display: "inline-flex", gap: 5, alignItems: "center", fontSize: 12.5, color: C.inkSoft }}>
-            <Lock size={13} /> Definida por {nomeProf(definidor.definido_por_id ?? "")} em {formatarData(definidor.definido_em)}
+            <Lock size={13} /> Definida {quemDefiniu(definidor)} em {formatarData(definidor.definido_em)}
           </span>
         )}
       </div>
@@ -160,6 +169,9 @@ export function GradeHorariaPage() {
               <Aviso tipo="info">Nenhum professor vinculado a esta turma. Defina as permissões dos professores antes de montar a grade.</Aviso>
             </div>
           )}
+          <datalist id="rotinas-grade">
+            {ROTINAS.map((r) => <option key={r} value={r} />)}
+          </datalist>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
             {DIAS_SEMANA.map((nomeDia, i) => {
               const dia = i + 1;
@@ -176,17 +188,39 @@ export function GradeHorariaPage() {
                           <Trash2 size={13} />
                         </button>
                       </div>
-                      <select className="tv-input" style={{ padding: "5px 6px", fontSize: 12.5 }} value={a.disciplina_id} onChange={(e) => mudar(a.chave, "disciplina_id", Number(e.target.value))} aria-label="Disciplina">
-                        {disciplinasDaTurma.map((d) => <option key={d} value={d}>{nomeDisc(d)}</option>)}
-                      </select>
-                      <select className="tv-input" style={{ padding: "5px 6px", fontSize: 12.5 }} value={a.professor_id} onChange={(e) => mudar(a.chave, "professor_id", e.target.value)} aria-label="Professor">
-                        {professoresDe(a.disciplina_id).map((p) => <option key={p} value={p}>{nomeProf(p)}</option>)}
-                      </select>
+                      {ehRotina(a) ? (
+                        <>
+                          <input
+                            className="tv-input"
+                            style={{ padding: "5px 6px", fontSize: 12.5, fontStyle: "italic" }}
+                            list="rotinas-grade"
+                            value={a.rotulo ?? ""}
+                            onChange={(e) => mudar(a.chave, "rotulo", e.target.value)}
+                            aria-label="Momento de rotina"
+                            placeholder="Ex.: Lanche"
+                          />
+                          <span style={{ fontSize: 11.5, color: C.inkSoft }}>Momento de rotina (sem professor)</span>
+                        </>
+                      ) : (
+                        <>
+                          <select className="tv-input" style={{ padding: "5px 6px", fontSize: 12.5 }} value={a.disciplina_id ?? ""} onChange={(e) => mudar(a.chave, "disciplina_id", Number(e.target.value))} aria-label="Disciplina">
+                            {disciplinasDaTurma.map((d) => <option key={d} value={d}>{nomeDisc(d)}</option>)}
+                          </select>
+                          <select className="tv-input" style={{ padding: "5px 6px", fontSize: 12.5 }} value={a.professor_id ?? ""} onChange={(e) => mudar(a.chave, "professor_id", e.target.value)} aria-label="Professor">
+                            {professoresDe(a.disciplina_id ?? 0).map((p) => <option key={p} value={p}>{nomeProf(p)}</option>)}
+                          </select>
+                        </>
+                      )}
                     </div>
                   ))}
-                  <button className="tv-btn-text" style={{ display: "inline-flex", gap: 4, alignItems: "center", fontSize: 12.5, marginTop: 4 }} onClick={() => adicionar(dia)} disabled={disciplinasDaTurma.length === 0}>
-                    <Plus size={13} /> Aula
-                  </button>
+                  <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                    <button className="tv-btn-text" style={{ display: "inline-flex", gap: 4, alignItems: "center", fontSize: 12.5 }} onClick={() => adicionar(dia, "aula")} disabled={disciplinasDaTurma.length === 0}>
+                      <Plus size={13} /> Aula
+                    </button>
+                    <button className="tv-btn-text" style={{ display: "inline-flex", gap: 4, alignItems: "center", fontSize: 12.5 }} onClick={() => adicionar(dia, "rotina")}>
+                      <Plus size={13} /> Rotina
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -198,7 +232,7 @@ export function GradeHorariaPage() {
             <span style={{ fontSize: 12.5, color: C.inkSoft }}>Antes dessa data continua valendo a grade anterior.</span>
             <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
               <button className="tv-btn tv-btn-secondary" onClick={() => setEdicao(null)}>Cancelar</button>
-              <button className="tv-btn tv-btn-primary" disabled={!edicao.desde} onClick={() => setRevisando(true)}>Revisar e salvar</button>
+              <button className="tv-btn tv-btn-primary" disabled={!edicao.desde || rotinaSemNome} title={rotinaSemNome ? "Dê um nome a cada momento de rotina." : undefined} onClick={() => setRevisando(true)}>Revisar e salvar</button>
             </div>
           </div>
         </div>
@@ -226,7 +260,7 @@ export function GradeHorariaPage() {
   );
 }
 
-function Grade({ titulo, aulas, nomeProf, nomeDisc }: { titulo: string; aulas: AulaGrade[]; nomeProf: (id: string) => string; nomeDisc: (id: number) => string }) {
+function Grade({ titulo, aulas, nomeProf, nomeDisc }: { titulo: string; aulas: AulaGrade[]; nomeProf: (id: string | null) => string; nomeDisc: (id: number | null) => string }) {
   return (
     <section>
       <h2 style={{ fontSize: 14, fontWeight: 600, color: C.inkSoft, margin: "0 0 10px" }}>{titulo}</h2>
@@ -240,8 +274,14 @@ function Grade({ titulo, aulas, nomeProf, nomeDisc }: { titulo: string; aulas: A
               {doDia.map((a, j) => (
                 <div key={j} style={{ padding: "6px 0", borderTop: j ? `1px dashed ${C.border}` : "none", fontSize: 12.5 }}>
                   <p style={{ margin: 0, fontWeight: 600 }}>{hora(a.hora_inicio)}–{hora(a.hora_fim)}</p>
-                  <p style={{ margin: 0 }}>{nomeDisc(a.disciplina_id)}</p>
-                  <p style={{ margin: 0, color: C.inkSoft }}>{nomeProf(a.professor_id)}</p>
+                  {ehRotina(a) ? (
+                    <p style={{ margin: 0, fontStyle: "italic", color: C.inkSoft }}>{a.rotulo}</p>
+                  ) : (
+                    <>
+                      <p style={{ margin: 0 }}>{nomeDisc(a.disciplina_id)}</p>
+                      <p style={{ margin: 0, color: C.inkSoft }}>{nomeProf(a.professor_id)}</p>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
@@ -259,8 +299,8 @@ function RevisarGrade({
   desde: string;
   antes: AulaGrade[];
   depois: AulaGrade[];
-  nomeProf: (id: string) => string;
-  nomeDisc: (id: number) => string;
+  nomeProf: (id: string | null) => string;
+  nomeDisc: (id: number | null) => string;
   onVoltar: () => void;
   onSalvar: () => Promise<void>;
 }) {
@@ -270,7 +310,8 @@ function RevisarGrade({
   const chavesDepois = new Set(depois.map(chaveAula));
   const adicionadas = ordenarAulas(depois.filter((a) => !chavesAntes.has(chaveAula(a))));
   const removidas = ordenarAulas(antes.filter((a) => !chavesDepois.has(chaveAula(a))));
-  const texto = (a: AulaGrade) => `${DIAS_SEMANA[a.dia_semana - 1]} ${hora(a.hora_inicio)}–${hora(a.hora_fim)} · ${nomeDisc(a.disciplina_id)} · ${nomeProf(a.professor_id)}`;
+  const texto = (a: AulaGrade) =>
+    `${DIAS_SEMANA[a.dia_semana - 1]} ${hora(a.hora_inicio)}–${hora(a.hora_fim)} · ${ehRotina(a) ? a.rotulo : `${nomeDisc(a.disciplina_id)} · ${nomeProf(a.professor_id)}`}`;
 
   async function salvar() {
     setEnviando(true);
@@ -297,7 +338,7 @@ function RevisarGrade({
     >
       <p style={{ fontSize: 13.5, lineHeight: 1.55, margin: "0 0 12px" }}>
         A grade de <strong>{turmaNome}</strong> passa a valer a partir de <strong>{dataCurta(desde)}</strong> com{" "}
-        {depois.length} {depois.length === 1 ? "aula" : "aulas"} por semana.
+        {depois.filter((a) => !ehRotina(a)).length} {depois.filter((a) => !ehRotina(a)).length === 1 ? "aula" : "aulas"} por semana.
       </p>
       {adicionadas.length === 0 && removidas.length === 0 && <p style={{ fontSize: 13, color: C.inkSoft }}>Nenhuma aula mudou; só a data de início.</p>}
       {adicionadas.length > 0 && (

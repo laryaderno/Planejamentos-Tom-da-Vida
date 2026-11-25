@@ -8,11 +8,11 @@ import { useNomes } from "./api";
 import { dataCurta, hojeISO } from "./dominio";
 
 /** Período de entrega que cobre a semana exibida, com a data-limite e as entregas da turma. */
-export function PrazoDaSemana({ turmaId, inicio, fim }: { turmaId: number; inicio: string; fim: string }) {
+export function PrazoDaSemana({ turmaId, etapaId, inicio, fim }: { turmaId: number; etapaId: number; inicio: string; fim: string }) {
   const eu = useUsuario();
   const periodos = usePeriodos();
   const entregas = useEntregas();
-  const periodo = periodos.data?.find((p) => p.inicio <= fim && p.fim >= inicio);
+  const periodo = periodos.data?.find((p) => p.inicio <= fim && p.fim >= inicio && (p.etapa_id === null || p.etapa_id === etapaId));
   const daTurma = (entregas.data ?? []).filter((e) => periodo && e.periodo_id === periodo.id && e.turma_id === turmaId);
   const nomes = useNomes(daTurma.map((e) => e.professor_id));
 

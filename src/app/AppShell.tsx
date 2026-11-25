@@ -41,11 +41,11 @@ function Moldura() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 12px 22px" }}>
-          <div style={{ width: 34, height: 34, borderRadius: "50%", background: C.sidebarSoft, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+          <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#fff", padding: 2, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
             <img
               src={LOGO_URL}
               alt="Logo Escola Tom da Vida"
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              style={{ width: "100%", height: "100%", objectFit: "contain" }}
             />
           </div>
           <div style={{ minWidth: 0 }}>

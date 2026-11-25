@@ -24,7 +24,7 @@ export function MeusHorariosPage() {
   const segunda = inicioDaSemana(hoje);
   const atuais = ordenarAulas(horarios.data.filter((h) => vigenteEm(h, hoje)));
   const nomeTurma = (id: number) => turmas.data?.find((t) => t.id === id)?.nome ?? "Turma";
-  const nomeDisc = (id: number) => disciplinas.data?.find((d) => d.id === id)?.nome ?? "";
+  const nomeDisc = (id: number | null) => disciplinas.data?.find((d) => d.id === id)?.nome ?? "";
   const turnoDe = (h: string) => (h < "12:00" ? "matutino" : "vespertino");
 
   if (atuais.length === 0) {
