@@ -12,6 +12,7 @@ import { formatarData, usePerfis, useRecarregar } from "@/lib/consultas";
 import { mensagemDeErro, verificar } from "@/lib/erros";
 import { podeAlterarConfiguracao } from "@/lib/papeis";
 import { supabase } from "@/lib/supabase";
+import { DiasSemAula } from "./DiasSemAula";
 import { C } from "@/styles/tokens";
 
 interface Form {
@@ -118,6 +119,10 @@ export function PrazosPage() {
           </table>
         </div>
       )}
+
+      <div style={{ marginTop: 32 }}>
+        <DiasSemAula />
+      </div>
 
       {form && (
         <PeriodoModal

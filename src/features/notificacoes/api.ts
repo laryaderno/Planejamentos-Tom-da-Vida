@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { usePendentesParaAprovar } from "@/features/atividades/AtividadesParaAprovar";
 import { useUsuario } from "@/features/auth/AuthContext";
 import { usePerfis } from "@/lib/consultas";
 import type { Database, Tables } from "@/lib/database.types";
@@ -49,12 +50,13 @@ export function useSolicitacoesPendentes() {
   return (perfis.data ?? []).filter((p) => p.status === "pendente" && podeAprovar(eu, p.papel, p.etapa_solicitada_id));
 }
 
-/** Total do contador do sininho: notificações não lidas + cadastros aguardando. */
+/** Total do contador do sininho: avisos não lidos + cadastros e atividades aguardando decisão. */
 export function useContadorNotificacoes(): number {
   const notificacoes = useNotificacoes();
   const pendentes = useSolicitacoesPendentes();
+  const atividades = usePendentesParaAprovar();
   const naoLidas = (notificacoes.data ?? []).filter((n) => !n.lida_em).length;
-  return naoLidas + pendentes.length;
+  return naoLidas + pendentes.length + atividades.length;
 }
 
 /** Entregas indexadas por id (para mostrar a situação nas notificações). */

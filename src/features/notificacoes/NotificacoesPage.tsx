@@ -5,6 +5,7 @@ import { Aviso } from "@/components/Aviso";
 import { EmptyState } from "@/components/EmptyState";
 import { Carregando } from "@/components/TelaCarregando";
 import { useUsuario } from "@/features/auth/AuthContext";
+import { AtividadesParaAprovar, usePendentesParaAprovar } from "@/features/atividades/AtividadesParaAprovar";
 import { SolicitacoesPage } from "@/features/usuarios/SolicitacoesPage";
 import { formatarData } from "@/lib/consultas";
 import { mensagemDeErro, verificar } from "@/lib/erros";
@@ -18,6 +19,7 @@ export function NotificacoesPage() {
   const eu = useUsuario();
   const notificacoes = useNotificacoes();
   const pendentes = useSolicitacoesPendentes();
+  const atividadesPendentes = usePendentesParaAprovar();
   const entregas = useEntregasPorId();
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -47,10 +49,19 @@ export function NotificacoesPage() {
         </section>
       )}
 
+      {gestor && (
+        <section>
+          <h2 style={titulo}>
+            Atividades para aprovar {atividadesPendentes.length > 0 && <Contador n={atividadesPendentes.length} />}
+          </h2>
+          <AtividadesParaAprovar />
+        </section>
+      )}
+
       <section>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
           <h2 style={{ ...titulo, margin: 0 }}>
-            Entregas de planejamento {naoLidas > 0 && <Contador n={naoLidas} />}
+            Avisos {naoLidas > 0 && <Contador n={naoLidas} />}
           </h2>
           {naoLidas > 0 && (
             <button className="tv-btn-text" onClick={() => void marcarLidas()}>Marcar todas como lidas</button>
@@ -62,11 +73,11 @@ export function NotificacoesPage() {
         {notificacoes.data && lista.length === 0 && (
           <EmptyState
             icon={eu.papel === "professor" ? CalendarCheck : Bell}
-            title="Nenhuma notificação de entrega."
+            title="Nenhum aviso."
             description={
               eu.papel === "professor"
-                ? "Quando você concluir todos os dias de um período, a confirmação da entrega aparece aqui, dizendo se foi com antecedência, no prazo ou com atraso."
-                : "Quando um professor concluir o planejamento de um período, você é avisado aqui, com a situação em relação ao prazo."
+                ? "Aqui aparecem a confirmação das suas entregas (com antecedência, no prazo ou com atraso) e o resultado das atividades que você enviou para o banco."
+                : "Aqui aparecem as entregas de planejamento dos professores, com a situação em relação ao prazo, e as novas atividades enviadas para aprovação."
             }
           />
         )}

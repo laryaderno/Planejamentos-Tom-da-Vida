@@ -1,4 +1,4 @@
-import { Archive, ArrowLeft, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Archive, ArrowLeft, CalendarOff, ChevronLeft, ChevronRight, Clock, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useParams } from "react-router";
@@ -6,6 +6,8 @@ import { Aviso } from "@/components/Aviso";
 import { ConfirmarAcao } from "@/components/ConfirmarAcao";
 import { Carregando } from "@/components/TelaCarregando";
 import { useUsuario } from "@/features/auth/AuthContext";
+import { diaDaSemana, useHorariosTurma, vigenteEm, type Horario } from "@/features/grade/api";
+import { useDiasSemAula } from "@/features/prazos/DiasSemAula";
 import { formatarData, ROTULO_TURNO, useDisciplinas, useEtapas, useVinculos, type Turno } from "@/lib/consultas";
 import { mensagemDeErro, verificar } from "@/lib/erros";
 import { supabase } from "@/lib/supabase";
@@ -37,12 +39,25 @@ export function PlanejamentoDiaPage() {
   const [historico, setHistorico] = useState<Bloco | null>(null);
   const [removendo, setRemovendo] = useState<Bloco | null>(null);
 
+  const horarios = useHorariosTurma(turmaId);
+  const diasSemAula = useDiasSemAula();
+  const [criandoHorario, setCriandoHorario] = useState<number | null>(null);
+  const [erroHorario, setErroHorario] = useState<string | null>(null);
+
   const p = dia.data;
-  const nomes = useNomes([...(p?.blocos.map((b) => b.professor_id) ?? []), ...(p?.notas.map((n) => n.autor_id) ?? [])]);
+  // Aulas da grade previstas para esta data e turno.
+  const previstos = (horarios.data ?? []).filter(
+    (h) => vigenteEm(h, data) && h.dia_semana === diaDaSemana(data) && (h.hora_inicio < "12:00" ? "matutino" : "vespertino") === turno,
+  );
+  const nomes = useNomes([
+    ...(p?.blocos.map((b) => b.professor_id) ?? []),
+    ...(p?.notas.map((n) => n.autor_id) ?? []),
+    ...previstos.map((h) => h.professor_id),
+  ]);
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return <Navigate to="/planejamentos" replace />;
   if (dia.error) return <Aviso>{mensagemDeErro(dia.error)}</Aviso>;
-  if (!turmas || dia.isPending || !etapas.data || !disciplinas.data) return <Carregando />;
+  if (!turmas || dia.isPending || horarios.isPending || diasSemAula.isPending || !etapas.data || !disciplinas.data) return <Carregando />;
 
   const turma = turmas.find((t) => t.id === turmaId);
   if (!turma) return <Aviso>Você não tem acesso a esta turma.</Aviso>;
@@ -56,6 +71,23 @@ export function PlanejamentoDiaPage() {
     .map((v) => v.disciplina_id!);
   const souProfessor = eu.papel === "professor" && minhasDisciplinas.length > 0;
   const blocos = p?.blocos ?? [];
+  const semAula = diasSemAula.data?.find((d) => d.data === data && (d.etapa_id === null || d.etapa_id === turma.etapa_id));
+  const pendentes = previstos.filter((h) => !blocos.some((b) => b.professor_id === h.professor_id && b.disciplina_id === h.disciplina_id));
+  const meusPendentes = pendentes.filter((h) => h.professor_id === eu.id);
+
+  async function planejarHorario(h: Horario) {
+    setCriandoHorario(h.id);
+    setErroHorario(null);
+    try {
+      const plan = verificar(await supabase.rpc("abrir_planejamento", { p_turma: turmaId, p_data: data, p_turno: turno }));
+      verificar(await supabase.rpc("criar_bloco", { p_planejamento: plan, p_disciplina: h.disciplina_id, p_inicio: hora(h.hora_inicio), p_fim: hora(h.hora_fim) }));
+      await dia.refetch();
+    } catch (e) {
+      setErroHorario(mensagemDeErro(e));
+    } finally {
+      setCriandoHorario(null);
+    }
+  }
   const semanaUrl = `/planejamentos?turma=${turmaId}&semana=${data}`;
   const base = `/planejamentos/${turmaId}`;
 
@@ -109,8 +141,41 @@ export function PlanejamentoDiaPage() {
         </div>
       </section>
 
-      {blocos.length === 0 && !souProfessor && (
+      {semAula && (
+        <Aviso tipo="info">
+          <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}><CalendarOff size={14} /> Dia sem aula: {semAula.descricao}.</span>{" "}
+          O planejamento deste dia não é exigido para a entrega.
+        </Aviso>
+      )}
+
+      {blocos.length === 0 && pendentes.length === 0 && !souProfessor && !semAula && (
         <Aviso tipo="info">Ainda não há planejamento para este dia e turno.</Aviso>
+      )}
+
+      {!semAula && pendentes.length > 0 && (
+        <section className="tv-card" style={{ padding: 16 }}>
+          <h2 style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 14, fontWeight: 600, margin: "0 0 10px" }}>
+            <Clock size={15} color={C.goldDeep} /> Horários da grade ainda sem planejamento
+          </h2>
+          {pendentes.map((h) => {
+            const meu = h.professor_id === eu.id;
+            return (
+              <div key={h.id} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", padding: "8px 0", borderTop: `1px dashed ${C.border}`, fontSize: 13.5 }}>
+                <strong>{hora(h.hora_inicio)}–{hora(h.hora_fim)}</strong>
+                <span>{nomeDisciplina(h.disciplina_id)}</span>
+                <span style={{ color: C.inkSoft }}>· {meu ? "você" : nomes.data?.get(h.professor_id) ?? "…"}</span>
+                {meu ? (
+                  <button className="tv-btn tv-btn-primary" style={{ marginLeft: "auto", padding: "6px 12px" }} onClick={() => void planejarHorario(h)} disabled={criandoHorario !== null}>
+                    {criandoHorario === h.id ? "Criando…" : "Planejar este horário"}
+                  </button>
+                ) : (
+                  <span style={{ marginLeft: "auto", fontSize: 12, color: C.inkSoft }}>aguardando</span>
+                )}
+              </div>
+            );
+          })}
+          {erroHorario && <div style={{ marginTop: 8 }}><Aviso>{erroHorario}</Aviso></div>}
+        </section>
       )}
 
       {blocos.map((b) => {
@@ -140,13 +205,14 @@ export function PlanejamentoDiaPage() {
             {meu ? (
               <BlocoEditor
                 bloco={b}
+                etapaId={turma.etapa_id}
                 exigeLinguagemAmor={exigeLinguagem}
                 onHistorico={() => setHistorico(b)}
                 onRemover={() => setRemovendo(b)}
                 aoSalvar={atualizarSemana}
               />
             ) : (
-              <BlocoLeitura bloco={b} exigeLinguagemAmor={exigeLinguagem} />
+              <BlocoLeitura bloco={b} etapaId={turma.etapa_id} exigeLinguagemAmor={exigeLinguagem} />
             )}
           </section>
         );
@@ -160,7 +226,7 @@ export function PlanejamentoDiaPage() {
           disciplinas={minhasDisciplinas.map((id) => ({ id, nome: nomeDisciplina(id) }))}
           sugestaoInicio={blocos.length ? hora(blocos[blocos.length - 1]!.hora_fim) : turno === "matutino" ? "07:30" : "13:00"}
           aoCriar={() => void dia.refetch()}
-          primeiro={blocos.filter((b) => b.professor_id === eu.id).length === 0}
+          primeiro={blocos.filter((b) => b.professor_id === eu.id).length === 0 && meusPendentes.length === 0 && !semAula}
         />
       )}
 

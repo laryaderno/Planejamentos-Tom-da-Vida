@@ -23,16 +23,60 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "blocos": {
+            "atividades": {
                   Row: {
-                    "arquivado_em": string | null,"atividades": string,"atualizado_em": string,"atualizado_por": string | null,"avaliacao": string,"conteudo": string,"criado_em": string,"disciplina_id": number,"estrategias": string,"excluido_em": string | null,"habilidades": (Database["public"]['Enums']["inteligencia"])[],"hora_fim": string,"hora_inicio": string,"id": number,"linguagem_amor": Database["public"]['Enums']["linguagem_amor"] | null,"objetivos": string,"planejamento_id": number,"professor_id": string,"recursos": string,"status": Database["public"]['Enums']["status_bloco"],"versao": number
+                    "arquivo_caminho": string,"arquivo_nome": string,"arquivo_tamanho": number,"arquivo_tipo": string,"avaliada_em": string | null,"avaliada_por": string | null,"bloco_id": number | null,"disciplina_id": number,"etapa_id": number,"id": number,"motivo_recusa": string | null,"proposta_em": string,"proposta_por": string,"status": Database["public"]['Enums']["status_atividade"],"tema": string,"titulo": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "arquivado_em"?: string | null,"atividades"?: string,"atualizado_em"?: string,"atualizado_por"?: string | null,"avaliacao"?: string,"conteudo"?: string,"criado_em"?: string,"disciplina_id": number,"estrategias"?: string,"excluido_em"?: string | null,"habilidades"?: (Database["public"]['Enums']["inteligencia"])[],"hora_fim": string,"hora_inicio": string,"id"?: never,"linguagem_amor"?: Database["public"]['Enums']["linguagem_amor"] | null,"objetivos"?: string,"planejamento_id": number,"professor_id": string,"recursos"?: string,"status"?: Database["public"]['Enums']["status_bloco"],"versao"?: number
+                    "arquivo_caminho": string,"arquivo_nome": string,"arquivo_tamanho": number,"arquivo_tipo": string,"avaliada_em"?: string | null,"avaliada_por"?: string | null,"bloco_id"?: number | null,"disciplina_id": number,"etapa_id": number,"id"?: never,"motivo_recusa"?: string | null,"proposta_em"?: string,"proposta_por": string,"status"?: Database["public"]['Enums']["status_atividade"],"tema": string,"titulo": string
                   }
                   Update: {
-                    "arquivado_em"?: string | null,"atividades"?: string,"atualizado_em"?: string,"atualizado_por"?: string | null,"avaliacao"?: string,"conteudo"?: string,"criado_em"?: string,"disciplina_id"?: number,"estrategias"?: string,"excluido_em"?: string | null,"habilidades"?: (Database["public"]['Enums']["inteligencia"])[],"hora_fim"?: string,"hora_inicio"?: string,"id"?: never,"linguagem_amor"?: Database["public"]['Enums']["linguagem_amor"] | null,"objetivos"?: string,"planejamento_id"?: number,"professor_id"?: string,"recursos"?: string,"status"?: Database["public"]['Enums']["status_bloco"],"versao"?: number
+                    "arquivo_caminho"?: string,"arquivo_nome"?: string,"arquivo_tamanho"?: number,"arquivo_tipo"?: string,"avaliada_em"?: string | null,"avaliada_por"?: string | null,"bloco_id"?: number | null,"disciplina_id"?: number,"etapa_id"?: number,"id"?: never,"motivo_recusa"?: string | null,"proposta_em"?: string,"proposta_por"?: string,"status"?: Database["public"]['Enums']["status_atividade"],"tema"?: string,"titulo"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "atividades_avaliada_por_fkey"
+      columns: ["avaliada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "atividades_bloco_id_fkey"
+      columns: ["bloco_id"]
+isOneToOne: false
+      referencedRelation: "blocos"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "atividades_disciplina_id_fkey"
+      columns: ["disciplina_id"]
+isOneToOne: false
+      referencedRelation: "disciplinas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "atividades_etapa_id_fkey"
+      columns: ["etapa_id"]
+isOneToOne: false
+      referencedRelation: "etapas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "atividades_proposta_por_fkey"
+      columns: ["proposta_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"blocos": {
+                  Row: {
+                    "arquivado_em": string | null,"atividades": string,"atualizado_em": string,"atualizado_por": string | null,"avaliacao": string,"conteudo": string,"criado_em": string,"disciplina_id": number,"estrategias": string,"excluido_em": string | null,"habilidades": (Database["public"]['Enums']["inteligencia"])[],"hora_fim": string,"hora_inicio": string,"id": number,"linguagens_amor": (Database["public"]['Enums']["linguagem_amor"])[],"objetivos": string,"planejamento_id": number,"professor_id": string,"recursos": string,"status": Database["public"]['Enums']["status_bloco"],"versao": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "arquivado_em"?: string | null,"atividades"?: string,"atualizado_em"?: string,"atualizado_por"?: string | null,"avaliacao"?: string,"conteudo"?: string,"criado_em"?: string,"disciplina_id": number,"estrategias"?: string,"excluido_em"?: string | null,"habilidades"?: (Database["public"]['Enums']["inteligencia"])[],"hora_fim": string,"hora_inicio": string,"id"?: never,"linguagens_amor"?: (Database["public"]['Enums']["linguagem_amor"])[],"objetivos"?: string,"planejamento_id": number,"professor_id": string,"recursos"?: string,"status"?: Database["public"]['Enums']["status_bloco"],"versao"?: number
+                  }
+                  Update: {
+                    "arquivado_em"?: string | null,"atividades"?: string,"atualizado_em"?: string,"atualizado_por"?: string | null,"avaliacao"?: string,"conteudo"?: string,"criado_em"?: string,"disciplina_id"?: number,"estrategias"?: string,"excluido_em"?: string | null,"habilidades"?: (Database["public"]['Enums']["inteligencia"])[],"hora_fim"?: string,"hora_inicio"?: string,"id"?: never,"linguagens_amor"?: (Database["public"]['Enums']["linguagem_amor"])[],"objetivos"?: string,"planejamento_id"?: number,"professor_id"?: string,"recursos"?: string,"status"?: Database["public"]['Enums']["status_bloco"],"versao"?: number
                   }
                   Relationships: [
                     {
@@ -58,6 +102,32 @@ isOneToOne: false
       columns: ["professor_id"]
 isOneToOne: false
       referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"dias_sem_aula": {
+                  Row: {
+                    "data": string,"definido_em": string,"definido_por_id": string | null,"definido_por_nivel": number,"descricao": string,"etapa_id": number | null,"id": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "data": string,"definido_em"?: string,"definido_por_id"?: string | null,"definido_por_nivel"?: number,"descricao": string,"etapa_id"?: number | null,"id"?: never
+                  }
+                  Update: {
+                    "data"?: string,"definido_em"?: string,"definido_por_id"?: string | null,"definido_por_nivel"?: number,"descricao"?: string,"etapa_id"?: number | null,"id"?: never
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "dias_sem_aula_definido_por_id_fkey"
+      columns: ["definido_por_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dias_sem_aula_etapa_id_fkey"
+      columns: ["etapa_id"]
+isOneToOne: false
+      referencedRelation: "etapas"
       referencedColumns: ["id"]
     }
                   ]
@@ -138,6 +208,44 @@ isOneToOne: false
       columns: ["bloco_id"]
 isOneToOne: false
       referencedRelation: "blocos"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"horarios": {
+                  Row: {
+                    "definido_em": string,"definido_por_id": string | null,"definido_por_nivel": number,"dia_semana": number,"disciplina_id": number,"hora_fim": string,"hora_inicio": string,"id": number,"professor_id": string,"turma_id": number,"vigente_ate": string | null,"vigente_desde": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "definido_em"?: string,"definido_por_id"?: string | null,"definido_por_nivel"?: number,"dia_semana": number,"disciplina_id": number,"hora_fim": string,"hora_inicio": string,"id"?: never,"professor_id": string,"turma_id": number,"vigente_ate"?: string | null,"vigente_desde": string
+                  }
+                  Update: {
+                    "definido_em"?: string,"definido_por_id"?: string | null,"definido_por_nivel"?: number,"dia_semana"?: number,"disciplina_id"?: number,"hora_fim"?: string,"hora_inicio"?: string,"id"?: never,"professor_id"?: string,"turma_id"?: number,"vigente_ate"?: string | null,"vigente_desde"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "horarios_definido_por_id_fkey"
+      columns: ["definido_por_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "horarios_disciplina_id_fkey"
+      columns: ["disciplina_id"]
+isOneToOne: false
+      referencedRelation: "disciplinas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "horarios_professor_id_fkey"
+      columns: ["professor_id"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "horarios_turma_id_fkey"
+      columns: ["turma_id"]
+isOneToOne: false
+      referencedRelation: "turmas"
       referencedColumns: ["id"]
     }
                   ]
@@ -370,6 +478,9 @@ isOneToOne: false
 "aprovar_usuario":
 { Args: { "p_papel": Database["public"]['Enums']["papel"],"p_usuario": string,"p_vinculos"?: Json }; Returns: undefined
                            },
+"avaliar_atividade":
+{ Args: { "p_aprovar": boolean,"p_id": number,"p_motivo"?: string,"p_tema"?: string,"p_titulo"?: string }; Returns: undefined
+                           },
 "avaliar_entregas_do_periodo":
 { Args: { "p_periodo": number }; Returns: undefined
                            },
@@ -383,13 +494,33 @@ isOneToOne: false
 { Args: { "p_id": number }; Returns: undefined
                            },
 "dias_uteis_entre":
-{ Args: { "a": string,"b": string }; Returns: number
+{ Args: { "a": string,"b": string,"p_etapa"?: number }; Returns: number
+                           },
+"exigir_direcao_ou_secretaria":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"feriados_nacionais":
+{ Args: { "p_ano": number }; Returns: {
+              "data": string,"descricao": string
+            }[]
                            },
 "gravar_vinculos":
 { Args: { "p_usuario": string,"p_vinculos": Json }; Returns: undefined
                            },
+"ha_aula":
+{ Args: { "p_data": string,"p_etapa"?: number }; Returns: boolean
+                           },
+"horario_vigente":
+{ Args: { "h": Omit<Database["public"]['Tables']["horarios"]['Row'], Database["public"]['Tables']["horarios"]['ComputedFields']>,"p_data": string }; Returns: boolean
+                           },
+"importar_feriados_nacionais":
+{ Args: { "p_ano": number }; Returns: number
+                           },
 "leciona":
 { Args: { "p_disciplina": number,"p_turma": number }; Returns: boolean
+                           },
+"limite_arquivo":
+{ Args: { "p_tipo": string }; Returns: number
                            },
 "marcar_notificacoes_lidas":
 { Args: { "p_ids"?: (number)[] }; Returns: undefined
@@ -414,6 +545,12 @@ isOneToOne: false
               "id": string,"nome": string
             }[]
                            },
+"notificar":
+{ Args: { "p_link": string,"p_mensagem": string,"p_tipo": string,"p_titulo": string,"p_usuario": string }; Returns: undefined
+                           },
+"pascoa":
+{ Args: { "p_ano": number }; Returns: string
+                           },
 "periodo_concluido":
 { Args: { "p_periodo": number,"p_professor": string,"p_turma": number }; Returns: boolean
                            },
@@ -426,11 +563,20 @@ isOneToOne: false
 "pode_gerenciar":
 { Args: { "p_alvo": string }; Returns: boolean
                            },
+"pode_ver_etapa":
+{ Args: { "p_etapa": number }; Returns: boolean
+                           },
 "pode_ver_planejamento":
 { Args: { "p_planejamento": number }; Returns: boolean
                            },
 "pode_ver_turma":
 { Args: { "p_turma": number }; Returns: boolean
+                           },
+"propor_atividade":
+{ Args: { "p_bloco": number,"p_caminho": string,"p_nome": string,"p_tamanho": number,"p_tema": string,"p_tipo": string,"p_titulo": string }; Returns: number
+                           },
+"reavaliar_periodos_da_data":
+{ Args: { "p_data": string }; Returns: undefined
                            },
 "recusar_usuario":
 { Args: { "p_usuario": string }; Returns: undefined
@@ -438,7 +584,13 @@ isOneToOne: false
 "registrar_entrega":
 { Args: { "p_entregue_em": string,"p_notificar": boolean,"p_periodo": number,"p_professor": string,"p_turma": number }; Returns: undefined
                            },
+"remover_atividade":
+{ Args: { "p_id": number }; Returns: undefined
+                           },
 "remover_bloco":
+{ Args: { "p_id": number }; Returns: undefined
+                           },
+"remover_dia_sem_aula":
 { Args: { "p_id": number }; Returns: undefined
                            },
 "remover_periodo":
@@ -459,6 +611,12 @@ isOneToOne: false
 "salvar_bloco":
 { Args: { "p_campos": Json,"p_id": number,"p_versao": number }; Returns: Json
                            },
+"salvar_dia_sem_aula":
+{ Args: { "p_data": string,"p_descricao": string,"p_etapa"?: number,"p_id": number }; Returns: number
+                           },
+"salvar_grade":
+{ Args: { "p_aulas": Json,"p_turma": number,"p_vigente_desde": string }; Returns: undefined
+                           },
 "salvar_periodo":
 { Args: { "p_fim": string,"p_id": number,"p_inicio": string,"p_prazo": string }; Returns: number
                            },
@@ -466,14 +624,14 @@ isOneToOne: false
 { Args: { "p_etapa": number,"p_id": number,"p_nome": string,"p_turno": Database["public"]['Enums']["turno"] }; Returns: number
                            },
 "situacao_da_entrega":
-{ Args: { "p_entregue": string,"p_prazo": string }; Returns: Database["public"]['Enums']["situacao_entrega"]
+{ Args: { "p_entregue": string,"p_etapa"?: number,"p_prazo": string }; Returns: Database["public"]['Enums']["situacao_entrega"]
                            },
 "validar_vinculos":
 { Args: { "p_papel": Database["public"]['Enums']["papel"],"p_vinculos": Json }; Returns: undefined
                            }
           }
           Enums: {
-            "inteligencia": "linguistica"|"logico_matematica"|"espacial"|"corporal_cinestesica"|"musical"|"interpessoal"|"intrapessoal"|"naturalista","linguagem_amor": "palavras_afirmacao"|"tempo_qualidade"|"presentes"|"atos_servico"|"toque_fisico","papel": "administrador"|"diretor"|"secretaria"|"coordenador"|"professor","situacao_entrega": "antecipado"|"no_prazo"|"atrasado","status_bloco": "cinza"|"amarelo"|"verde","status_usuario": "pendente"|"ativo"|"recusado"|"removido","turno": "matutino"|"vespertino"
+            "inteligencia": "linguistica"|"logico_matematica"|"espacial"|"corporal_cinestesica"|"musical"|"interpessoal"|"intrapessoal"|"naturalista","linguagem_amor": "palavras_afirmacao"|"tempo_qualidade"|"presentes"|"atos_servico"|"toque_fisico","papel": "administrador"|"diretor"|"secretaria"|"coordenador"|"professor","situacao_entrega": "antecipado"|"no_prazo"|"atrasado","status_atividade": "pendente"|"aprovada"|"recusada","status_bloco": "cinza"|"amarelo"|"verde","status_usuario": "pendente"|"ativo"|"recusado"|"removido","turno": "matutino"|"vespertino"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -593,7 +751,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "inteligencia": ["linguistica", "logico_matematica", "espacial", "corporal_cinestesica", "musical", "interpessoal", "intrapessoal", "naturalista"],"linguagem_amor": ["palavras_afirmacao", "tempo_qualidade", "presentes", "atos_servico", "toque_fisico"],"papel": ["administrador", "diretor", "secretaria", "coordenador", "professor"],"situacao_entrega": ["antecipado", "no_prazo", "atrasado"],"status_bloco": ["cinza", "amarelo", "verde"],"status_usuario": ["pendente", "ativo", "recusado", "removido"],"turno": ["matutino", "vespertino"]
+            "inteligencia": ["linguistica", "logico_matematica", "espacial", "corporal_cinestesica", "musical", "interpessoal", "intrapessoal", "naturalista"],"linguagem_amor": ["palavras_afirmacao", "tempo_qualidade", "presentes", "atos_servico", "toque_fisico"],"papel": ["administrador", "diretor", "secretaria", "coordenador", "professor"],"situacao_entrega": ["antecipado", "no_prazo", "atrasado"],"status_atividade": ["pendente", "aprovada", "recusada"],"status_bloco": ["cinza", "amarelo", "verde"],"status_usuario": ["pendente", "ativo", "recusado", "removido"],"turno": ["matutino", "vespertino"]
           }
         }
 } as const

@@ -11,6 +11,8 @@ import { PlanejamentoDiaPage } from "@/features/planejamentos/PlanejamentoDiaPag
 import { PlanejamentosPage } from "@/features/planejamentos/PlanejamentosPage";
 import { PrazosPage } from "@/features/prazos/PrazosPage";
 import { ConteudoPage } from "@/features/relatorios/ConteudoPage";
+import { GradeHorariaPage } from "@/features/grade/GradeHorariaPage";
+import { MeusHorariosPage } from "@/features/grade/MeusHorariosPage";
 import { NotificacoesPage } from "@/features/notificacoes/NotificacoesPage";
 import { TurmasPage } from "@/features/turmas/TurmasPage";
 import { EquipePage } from "@/features/usuarios/EquipePage";
@@ -35,6 +37,8 @@ export const router = createBrowserRouter([
           { path: "visao-geral", element: <VisaoGeralPage /> },
           { path: "planejamentos", element: <PlanejamentosPage /> },
           { path: "planejamentos/:turma/:data/:turno", element: <PlanejamentoDiaPage /> },
+          { path: "grade", element: <GradeHorariaPage /> },
+          { path: "meus-horarios", element: <MeusHorariosPage /> },
           { path: "turmas", element: <TurmasPage /> },
           { path: "professores", element: <ProfessoresPage /> },
           { path: "equipe", element: <EquipePage /> },

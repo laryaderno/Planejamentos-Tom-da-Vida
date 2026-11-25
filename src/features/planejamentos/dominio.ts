@@ -47,6 +47,7 @@ export const ROTULO_CAMPO: Record<string, string> = {
   hora_fim: "Fim",
   habilidades: "Inteligências trabalhadas",
   linguagem_amor: "Linguagem do Amor",
+  linguagens_amor: "Linguagens do Amor",
   status: "Status",
   arquivado_em: "Arquivado",
   excluido_em: "Excluído",

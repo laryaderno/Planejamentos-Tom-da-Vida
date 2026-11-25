@@ -1,6 +1,7 @@
 import { AlertTriangle, CheckCircle2, CloudOff, History, Loader2, Save, Trash2 } from "lucide-react";
 import { useState, type CSSProperties } from "react";
 import { Aviso } from "@/components/Aviso";
+import { AnexosBloco } from "@/features/atividades/AnexosBloco";
 import { formatarData } from "@/lib/consultas";
 import { C } from "@/styles/tokens";
 import type { Bloco } from "./api";
@@ -19,6 +20,7 @@ import { useSalvamento, type EstadoSalvamento } from "./useSalvamento";
 
 interface Props {
   bloco: Bloco;
+  etapaId: number;
   exigeLinguagemAmor: boolean;
   onHistorico: () => void;
   onRemover?: () => void;
@@ -28,7 +30,7 @@ interface Props {
 const rotulo: CSSProperties = { display: "block", fontSize: 12.5, fontWeight: 600, color: C.ink, marginBottom: 5 };
 
 /** Edição do bloco do próprio professor, com salvamento automático (§6, §7). */
-export function BlocoEditor({ bloco, exigeLinguagemAmor, onHistorico, onRemover, aoSalvar }: Props) {
+export function BlocoEditor({ bloco, etapaId, exigeLinguagemAmor, onHistorico, onRemover, aoSalvar }: Props) {
   const s = useSalvamento(bloco, aoSalvar);
   const [textos, setTextos] = useState<Record<CampoTexto, string>>(() =>
     Object.fromEntries(CAMPOS_TEXTO.map((c) => [c.chave, bloco[c.chave]])) as Record<CampoTexto, string>,
@@ -36,11 +38,11 @@ export function BlocoEditor({ bloco, exigeLinguagemAmor, onHistorico, onRemover,
   const [inicio, setInicio] = useState(hora(bloco.hora_inicio));
   const [fim, setFim] = useState(hora(bloco.hora_fim));
   const [habilidades, setHabilidades] = useState<Inteligencia[]>(bloco.habilidades);
-  const [linguagem, setLinguagem] = useState<LinguagemAmor | null>(bloco.linguagem_amor);
+  const [linguagens, setLinguagens] = useState<LinguagemAmor[]>(bloco.linguagens_amor);
   const [status, setStatus] = useState<StatusBloco>(bloco.status);
 
   const vazio = Object.values(textos).every((t) => !t.trim()) && habilidades.length === 0 && status === "cinza";
-  const verdeBloqueado = exigeLinguagemAmor && !linguagem;
+  const verdeBloqueado = exigeLinguagemAmor && linguagens.length === 0;
 
   function texto(campo: CampoTexto, v: string) {
     setTextos((t) => ({ ...t, [campo]: v }));
@@ -89,7 +91,7 @@ export function BlocoEditor({ bloco, exigeLinguagemAmor, onHistorico, onRemover,
                   role="radio"
                   aria-checked={ativo}
                   disabled={bloqueado}
-                  title={bloqueado ? "Informe a Linguagem do Amor trabalhada para concluir." : undefined}
+                  title={bloqueado ? "Marque ao menos uma Linguagem do Amor trabalhada para concluir." : undefined}
                   onClick={() => {
                     setStatus(st);
                     s.alterar("status", st);
@@ -110,21 +112,26 @@ export function BlocoEditor({ bloco, exigeLinguagemAmor, onHistorico, onRemover,
       </div>
 
       {exigeLinguagemAmor && (
-        <fieldset style={{ border: `1px solid ${linguagem ? C.border : "#E3B9A8"}`, borderRadius: 9, padding: "10px 12px 12px", margin: "0 0 16px" }}>
+        <fieldset style={{ border: `1px solid ${linguagens.length ? C.border : "#E3B9A8"}`, borderRadius: 9, padding: "10px 12px 12px", margin: "0 0 16px" }}>
           <legend style={{ fontSize: 12.5, fontWeight: 600, padding: "0 4px" }}>
-            Linguagem do Amor trabalhada <span style={{ color: C.red }}>*</span>
-            <span style={{ fontWeight: 400, color: C.inkSoft }}> — obrigatória para concluir</span>
+            Linguagens do Amor trabalhadas <span style={{ color: C.red }}>*</span>
+            <span style={{ fontWeight: 400, color: C.inkSoft }}> — marque uma ou mais; obrigatório para concluir</span>
           </legend>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px" }}>
             {(Object.keys(LINGUAGENS_AMOR) as LinguagemAmor[]).map((l) => (
               <label key={l} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}>
                 <input
-                  type="radio"
-                  name={`linguagem-${bloco.id}`}
-                  checked={linguagem === l}
+                  type="checkbox"
+                  checked={linguagens.includes(l)}
                   onChange={() => {
-                    setLinguagem(l);
-                    s.alterar("linguagem_amor", l);
+                    const nova = linguagens.includes(l) ? linguagens.filter((x) => x !== l) : [...linguagens, l];
+                    setLinguagens(nova);
+                    s.alterar("linguagens_amor", nova);
+                    // sem nenhuma linguagem, não pode continuar concluído
+                    if (nova.length === 0 && status === "verde") {
+                      setStatus("amarelo");
+                      s.alterar("status", "amarelo");
+                    }
                   }}
                 />
                 {LINGUAGENS_AMOR[l]}
@@ -145,6 +152,9 @@ export function BlocoEditor({ bloco, exigeLinguagemAmor, onHistorico, onRemover,
               value={textos[c.chave]}
               onChange={(e) => texto(c.chave, e.target.value)}
             />
+            {c.chave === "atividades" && (
+              <AnexosBloco blocoId={bloco.id} etapaId={etapaId} disciplinaId={bloco.disciplina_id} editavel />
+            )}
             {c.chave === "objetivos" && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 7 }} aria-label="Inteligências trabalhadas">
                 {(Object.keys(INTELIGENCIAS) as Inteligencia[]).map((h) => {
@@ -219,20 +229,27 @@ function IndicadorSalvamento({ estado, salvoEm }: { estado: EstadoSalvamento; sa
 }
 
 /** Bloco de outro professor (ou arquivado): somente leitura. */
-export function BlocoLeitura({ bloco, exigeLinguagemAmor }: { bloco: Bloco; exigeLinguagemAmor: boolean }) {
+export function BlocoLeitura({ bloco, etapaId, exigeLinguagemAmor }: { bloco: Bloco; etapaId: number; exigeLinguagemAmor: boolean }) {
   const preenchidos = CAMPOS_TEXTO.filter((c) => bloco[c.chave].trim());
   return (
     <div style={{ display: "grid", gap: 12 }}>
       {exigeLinguagemAmor && (
         <p style={{ margin: 0, fontSize: 13 }}>
-          <strong>Linguagem do Amor:</strong> {bloco.linguagem_amor ? LINGUAGENS_AMOR[bloco.linguagem_amor] : <span style={{ color: C.inkSoft }}>não informada</span>}
+          <strong>Linguagens do Amor:</strong>{" "}
+          {bloco.linguagens_amor.length ? bloco.linguagens_amor.map((l) => LINGUAGENS_AMOR[l]).join(", ") : <span style={{ color: C.inkSoft }}>não informadas</span>}
         </p>
       )}
       {preenchidos.length === 0 && <p style={{ margin: 0, fontSize: 13, color: C.inkSoft }}>Ainda sem conteúdo.</p>}
+      {!bloco.atividades.trim() && (
+        <AnexosBloco blocoId={bloco.id} etapaId={etapaId} disciplinaId={bloco.disciplina_id} editavel={false} />
+      )}
       {preenchidos.map((c) => (
         <div key={c.chave}>
           <p style={{ fontSize: 12.5, fontWeight: 600, color: C.inkSoft, margin: "0 0 3px" }}>{c.rotulo}</p>
           <p style={{ fontSize: 13.5, color: C.ink, margin: 0, whiteSpace: "pre-wrap", lineHeight: 1.55 }}>{bloco[c.chave]}</p>
+          {c.chave === "atividades" && (
+            <AnexosBloco blocoId={bloco.id} etapaId={etapaId} disciplinaId={bloco.disciplina_id} editavel={false} />
+          )}
           {c.chave === "objetivos" && bloco.habilidades.length > 0 && (
             <p style={{ fontSize: 12, color: C.goldDeep, margin: "4px 0 0" }}>{bloco.habilidades.map((h) => INTELIGENCIAS[h]).join(" · ")}</p>
           )}

@@ -49,8 +49,8 @@ Senha de todos: `senha123`.
 | joao@tomdavida.test | Professor (Educação Infantil) | pendente |
 | carla@tomdavida.test | Coordenador (Fundamental I) | pendente |
 
-O seed também cria alguns planejamentos da semana atual (Jardim 1 e 6º Ano A) em
-`supabase/seed_planejamentos_dev.sql`.
+O seed também cria, em `supabase/seed_planejamentos_dev.sql`, alguns planejamentos da semana atual, a grade
+horária do Jardim 1 e do 6º Ano A e dois períodos de entrega (esta semana e a próxima).
 
 #### Primeiro Administrador em produção
 

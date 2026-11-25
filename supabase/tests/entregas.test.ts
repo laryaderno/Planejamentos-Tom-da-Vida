@@ -27,8 +27,8 @@ async function vincular(usuario: string, etapa: number, turma: number | null, di
 async function concluirDia(prof: string, turma: number, disciplina: number, data: string, inicio = "07:30", fim = "11:30") {
   const plan = Number(await valor(prof, `public.abrir_planejamento($1, '${data}', 'matutino')`, [turma]));
   const bloco = Number(await valor(prof, `public.criar_bloco($1, $2, '${inicio}', '${fim}')`, [plan, disciplina]));
-  const campos: Record<string, string> = { conteudo: "Aula", status: "verde" };
-  if (turma === JARDIM1) campos.linguagem_amor = "presentes";
+  const campos: Record<string, unknown> = { conteudo: "Aula", status: "verde" };
+  if (turma === JARDIM1) campos.linguagens_amor = ["presentes"];
   await valor(prof, "public.salvar_bloco($1, null, $2)", [bloco, JSON.stringify(campos)]);
   return bloco;
 }

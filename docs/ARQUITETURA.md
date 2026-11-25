@@ -126,7 +126,7 @@ blocos            (id, planejamento_id, professor_id, disciplina_id NULL,
                    hora_inicio, hora_fim,
                    conteudo, objetivos, habilidades text[],  -- tags de inteligências
                    estrategias, atividades, avaliacao, recursos,
-                   linguagem_amor NULL,                      -- enum; obrigatório só na Ed. Infantil
+                   linguagens_amor[],                        -- uma ou mais; ao menos uma para concluir na Ed. Infantil
                    status,                                   -- 'cinza' | 'amarelo' | 'verde'
                    concluido_em NULL,
                    versao int,                               -- para detectar edição concorrente
@@ -146,8 +146,8 @@ historico_blocos  (id, bloco_id, autor_id, em, campo, valor_anterior, valor_novo
 - O status do planejamento do dia é derivado: **verde** se todos os blocos estão verdes,
   **amarelo** se algum foi iniciado, **cinza** caso contrário. *(ver decisão em aberto D1)*
 
-**Regra da Educação Infantil:** constraint/trigger em `blocos` recusa `status = 'verde'` quando a
-etapa da turma tem `exige_linguagem_amor = true` e `linguagem_amor IS NULL`. O front esconde o
+**Regra da Educação Infantil:** trigger em `blocos` recusa `status = 'verde'` quando a etapa da turma
+tem `exige_linguagem_amor = true` e nenhuma Linguagem do Amor foi marcada (pode haver mais de uma). O front esconde o
 campo nas demais etapas, mas a regra vale no banco.
 
 **Professor removido (decisão D6):** quem remove o professor escolhe, no próprio modal de
@@ -190,22 +190,61 @@ entregas          (id, periodo_id, professor_id, turma_id, entregue_em, situacao
 notificacoes      (id, usuario_id, tipo, titulo, mensagem, link, entrega_id, criada_em, lida_em)
 ```
 
+```sql
+dias_sem_aula     (id, data, descricao, etapa_id NULL, definido_por_*)   -- NULL = escola toda
+horarios          (id, turma_id, dia_semana 1–5, hora_inicio, hora_fim, disciplina_id, professor_id,
+                   vigente_desde, vigente_ate NULL, definido_por_*)       -- grade horária com vigência
+```
+
 **Entrega (decisões de 25/11/2026):**
 
-- O período conta como **entregue** quando o professor conclui (verde) todos os dias dele naquela turma:
-  o **Regente**, todos os dias úteis (seg–sex) do período; o **especialista**, todos os blocos que criou
-  no período (ao menos um). Feriados ainda não são considerados.
+- O período conta como **entregue** quando o professor conclui (verde) as aulas dele naquela turma:
+  - **com grade horária:** em cada dia com aula do período, um bloco concluído de cada disciplina que a grade
+    lhe atribui naquele dia da semana;
+  - **sem grade** (turma ainda sem grade ou professor fora dela): o Regente, todos os dias com aula; o
+    especialista, todos os blocos que criou no período (ao menos um).
+- **Dias sem aula** (feriados, recessos, formações) não são exigidos e não contam como dias úteis. A Direção
+  ou a Secretaria os cadastra em *Prazos e ciclos*, para a escola toda ou para uma etapa; há importação dos
+  feriados nacionais do ano (inclui Carnaval, Sexta-feira Santa e Corpus Christi, calculados pela Páscoa).
+  Feriados estaduais e municipais são cadastrados à mão.
 - **Situação:** 2 ou mais dias úteis antes da data-limite = *com antecedência*; no dia ou na véspera =
   *no prazo*; depois = *com atraso*.
-- A verificação roda no banco, no momento em que um bloco fica verde. Voltar a amarelo e concluir de novo
-  não gera nova entrega. Um período cadastrado depois registra as entregas que já estavam concluídas
-  (com a data em que ficaram verdes), sem notificar retroativamente.
+- A verificação roda no banco quando um bloco fica verde. Voltar a amarelo e concluir de novo não gera nova
+  entrega. Cadastrar um período, um dia sem aula ou uma nova grade reavalia as entregas em aberto (sem
+  notificar retroativamente).
 - **Notificados:** o próprio professor, os Coordenadores da etapa e os Diretores.
 - O sininho do menu se chama **Notificações**: junta os avisos de entrega e as solicitações de cadastro,
   com contador de não lidas.
 
-Ainda para a Fase 5: lembretes e alertas por e-mail (§8.2, §8.4), etiqueta "Atrasado" para quem ainda não
-entregou após o prazo, e feriados.
+**Grade horária:** montada pela Coordenação (na sua etapa), Secretaria e Direção, com trava em cascata. Só
+aceita professor com vínculo na turma e disciplina, sem sobreposição na turma nem do mesmo professor em duas
+turmas. Cada versão vale "a partir de" uma data; a anterior termina na véspera. O professor vê *Meus
+horários*; no dia, os horários previstos ainda sem bloco aparecem com o botão "Planejar este horário".
+
+Ainda para a Fase 5: lembretes e alertas por e-mail (§8.2, §8.4) e a etiqueta "Atrasado" para quem ainda não
+entregou após o prazo.
+
+### 3.3.1 Banco de atividades
+
+```sql
+atividades        (id, bloco_id, etapa_id, disciplina_id, titulo, tema, arquivo_caminho, arquivo_nome,
+                   arquivo_tipo, arquivo_tamanho, status, proposta_por, proposta_em,
+                   avaliada_por, avaliada_em, motivo_recusa)
+                  -- status: 'pendente' | 'aprovada' | 'recusada'
+storage: bucket privado "atividades", caminho <id do professor>/<nome único>
+```
+
+Decisões de 25/11/2026 (D4):
+
+- O professor anexa arquivos nas **Atividades Propostas** do próprio bloco, com título e sugestão de tema.
+  Tipos: PDF, Word, imagens, apresentações e planilhas (até 20 MB); áudio e vídeo curtos (até 50 MB).
+- A atividade fica **pendente** até a Coordenação da etapa, a Secretaria ou a Direção **aprovar** (podendo
+  ajustar título e tema) ou **recusar** (motivo obrigatório). A Coordenação da etapa é notificada do envio
+  (se a etapa não tiver Coordenação, a Secretaria); o professor é notificado do resultado.
+- Aprovada, entra no banco da **etapa**: pastas por **disciplina → tema**, com busca (título, tema,
+  disciplina, arquivo e professor). Professores e Coordenação da etapa, Secretaria e Direção veem e baixam.
+- Download por link temporário (10 min). Professor remove os próprios anexos enquanto não aprovados; quem
+  aprova remove qualquer um da etapa.
 
 ### 3.4 Universidade Corporativa
 
@@ -400,7 +439,7 @@ da fase indicada.
 | D1 | O status (cinza/amarelo/verde) é do planejamento inteiro ou de cada bloco? Com Regente e especialistas no mesmo dia, cada um precisa marcar o seu. | ✅ **Decidido:** status por bloco; o status do dia é derivado (verde só quando todos os blocos estão verdes) | 2 |
 | D2 | O que conta como "entregue" para o prazo? | ✅ **Decidido:** o período conta como entregue quando o professor conclui todos os dias dele na turma (Regente: todos os dias úteis; especialista: todos os blocos que criou). Ver §3.3 | 5 |
 | D3 | O protótipo tem **prazos por etapa/turma com dois modos**; a v2 diz que o prazo é **global**. Qual vale? | ✅ **Decidido:** global para a escola, com cada período (início, fim, data-limite) cadastrado pela Direção ou Secretaria | 5 |
-| D4 | O protótipo tem um **Banco de Atividades** (aprovação de atividades por tema) que não existe na v2. Continua no escopo? | ✅ **Decidido:** continua; ganha a seção *Planejamentos* (ver D6). Falta definir o fluxo de aprovação de atividades | 7 |
+| D4 | O protótipo tem um **Banco de Atividades** (aprovação de atividades por tema) que não existe na v2. Continua no escopo? | ✅ **Decidido:** continua, com anexos aprovados pela coordenação e pastas disciplina → tema (ver §3.3.1) e a aba *Planejamentos arquivados* (D6) | 2 |
 | D5 | Turno pertence à turma (como no protótipo) ou ao planejamento (como na v2: Data + Turno)? | ✅ **Decidido:** ao planejamento, com turno padrão vindo da turma | 2 |
 | D6 | Professor removido: o que acontece com os planejamentos dele? | ✅ **Decidido:** quem remove escolhe *Manter* (vão para Banco de Atividades → Planejamentos) ou *Excluir* (some das telas, mas continua no conteúdo programático e no relatório de entregas; ver §3.2) | 1 |
 | D7 | Ano letivo: turmas e planejamentos são arquivados na virada do ano? | Campo `ano_letivo` em turmas; filtro por ano | 2 |

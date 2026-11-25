@@ -11,6 +11,14 @@ function legivel(campo: string, valor: string | null): string {
   if (valor === null || valor === "") return "—";
   if (campo === "status") return STATUS[valor as StatusBloco]?.rotulo ?? valor;
   if (campo === "linguagem_amor") return LINGUAGENS_AMOR[valor as LinguagemAmor] ?? valor;
+  if (campo === "linguagens_amor") {
+    try {
+      const lista = JSON.parse(valor) as LinguagemAmor[];
+      return lista.length ? lista.map((l) => LINGUAGENS_AMOR[l]).join(", ") : "—";
+    } catch {
+      return valor;
+    }
+  }
   if (campo === "habilidades") {
     try {
       const lista = JSON.parse(valor) as Inteligencia[];

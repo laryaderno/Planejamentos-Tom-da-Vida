@@ -103,23 +103,26 @@ describe("edição dos blocos", () => {
     ).rejects.toThrow(/Linguagem do Amor/);
     await valor(u.regente!, "public.salvar_bloco($1, null, $2)", [
       BLOCO_REG,
-      JSON.stringify({ linguagem_amor: "tempo_qualidade", status: "verde" }),
+      JSON.stringify({ linguagens_amor: ["tempo_qualidade", "palavras_afirmacao"], status: "verde" }),
     ]);
     expect(await b.contar("select * from public.blocos where id = $1 and status = 'verde'", [BLOCO_REG])).toBe(1);
+    // mais de uma linguagem, guardadas em ordem e sem repetição
+    const r = await b.db.query<{ l: string }>("select linguagens_amor::text as l from public.blocos where id = $1", [BLOCO_REG]);
+    expect(r.rows[0]!.l).toBe("{palavras_afirmacao,tempo_qualidade}");
   });
 
   it("fora da Educação Infantil a Linguagem do Amor não existe", async () => {
     const plan = Number(await valor(u.outro!, "public.abrir_planejamento($1, '2026-12-01', 'matutino')", [ANO1]));
     const bloco = Number(await valor(u.outro!, "public.criar_bloco($1, $2, '07:30', '11:30')", [plan, POLIVALENTE]));
     await expect(
-      valor(u.outro!, "public.salvar_bloco($1, null, $2)", [bloco, JSON.stringify({ linguagem_amor: "presentes" })]),
+      valor(u.outro!, "public.salvar_bloco($1, null, $2)", [bloco, JSON.stringify({ linguagens_amor: ["presentes"] })]),
     ).rejects.toThrow(/só é registrada em turmas da Educação Infantil/);
     await valor(u.outro!, "public.salvar_bloco($1, null, $2)", [bloco, JSON.stringify({ status: "verde" })]);
   });
 
   it("histórico guarda cada campo alterado, com autor", async () => {
     const n = await b.contar("select * from public.historico_blocos where bloco_id = $1 and autor_id = $2", [BLOCO_REG, u.regente]);
-    // conteudo, habilidades, status(amarelo), recursos, linguagem_amor, status(verde)
+    // conteudo, habilidades, status(amarelo), recursos, linguagens_amor, status(verde)
     expect(n).toBe(6);
   });
 

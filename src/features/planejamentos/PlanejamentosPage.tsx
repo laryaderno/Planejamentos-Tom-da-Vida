@@ -1,9 +1,10 @@
-import { CalendarDays, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { CalendarDays, CalendarOff, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Link, useSearchParams } from "react-router";
 import { Aviso } from "@/components/Aviso";
 import { EmptyState } from "@/components/EmptyState";
 import { Carregando } from "@/components/TelaCarregando";
 import { useUsuario } from "@/features/auth/AuthContext";
+import { useDiasSemAula } from "@/features/prazos/DiasSemAula";
 import { ROTULO_TURNO, useEtapas, useTurmas, useVinculos, type Turma } from "@/lib/consultas";
 import { mensagemDeErro } from "@/lib/erros";
 import { NIVEL } from "@/lib/papeis";
@@ -19,10 +20,14 @@ export function useMinhasTurmas(): { turmas: Turma[] | null; erro: unknown } {
   const turmas = useTurmas();
   const vinculos = useVinculos();
   if (!turmas.data || !vinculos.data) return { turmas: null, erro: turmas.error ?? vinculos.error };
-  if (NIVEL[eu.papel] >= NIVEL.secretaria) return { turmas: turmas.data, erro: null };
-  if (eu.papel === "coordenador") return { turmas: turmas.data.filter((t) => eu.etapasCoordenadas.includes(t.etapa_id)), erro: null };
+  // Ordem: etapa (Infantil → Médio) e depois o nome ("2º Ano" antes de "10º Ano").
+  const ordenadas = [...turmas.data].sort(
+    (a, b) => a.etapa_id - b.etapa_id || a.nome.localeCompare(b.nome, "pt-BR", { numeric: true }),
+  );
+  if (NIVEL[eu.papel] >= NIVEL.secretaria) return { turmas: ordenadas, erro: null };
+  if (eu.papel === "coordenador") return { turmas: ordenadas.filter((t) => eu.etapasCoordenadas.includes(t.etapa_id)), erro: null };
   const minhas = new Set(vinculos.data.filter((v) => v.usuario_id === eu.id).map((v) => v.turma_id));
-  return { turmas: turmas.data.filter((t) => minhas.has(t.id)), erro: null };
+  return { turmas: ordenadas.filter((t) => minhas.has(t.id)), erro: null };
 }
 
 const DIAS_UTEIS = 5;
@@ -33,6 +38,7 @@ export function PlanejamentosPage() {
   const [params, setParams] = useSearchParams();
   const { turmas, erro } = useMinhasTurmas();
   const etapas = useEtapas();
+  const diasSemAula = useDiasSemAula();
 
   const semana = inicioDaSemana(params.get("semana") ?? hojeISO());
   const fim = somarDias(semana, DIAS_UTEIS - 1);
@@ -95,6 +101,7 @@ export function PlanejamentosPage() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 12 }}>
           {dias.map((dia) => {
             const doDia = planejamentos.data.filter((p) => p.data === dia);
+            const semAula = diasSemAula.data?.find((d) => d.data === dia && (d.etapa_id === null || d.etapa_id === turma.etapa_id));
             const turnos = [...new Set([turma.turno_padrao, ...doDia.map((p) => p.turno)])];
             return (
               <div key={dia} className="tv-card" style={{ padding: 14, borderColor: dia === hoje ? C.gold : undefined }}>
@@ -102,7 +109,13 @@ export function PlanejamentosPage() {
                   {dataCurta(dia)}
                   {dia === hoje && <span style={{ color: C.goldDeep, fontWeight: 500 }}> · hoje</span>}
                 </p>
+                {semAula && doDia.length === 0 ? (
+                  <p style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 12.5, color: C.inkSoft, margin: 0, padding: "9px 0" }}>
+                    <CalendarOff size={14} /> Sem aula · {semAula.descricao}
+                  </p>
+                ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {semAula && <p style={{ fontSize: 12, color: C.inkSoft, margin: 0 }}>Sem aula · {semAula.descricao}</p>}
                   {turnos.map((turno) => {
                     const p = doDia.find((x) => x.turno === turno);
                     const meus = p?.blocos.filter((b) => b.professor_id === eu.id) ?? [];
@@ -130,6 +143,7 @@ export function PlanejamentosPage() {
                     );
                   })}
                 </div>
+                )}
               </div>
             );
           })}
