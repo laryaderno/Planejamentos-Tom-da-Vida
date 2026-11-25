@@ -1,0 +1,86 @@
+import { LogOut } from "lucide-react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
+import { useAuth } from "@/features/auth/AuthContext";
+import { ROTULO_PAPEL } from "@/lib/papeis";
+import { C } from "@/styles/tokens";
+import { LOGO_URL } from "./marca";
+import { NAVEGACAO } from "./navegacao";
+
+export function AppShell() {
+  const { usuario, sair } = useAuth();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const titulo = NAVEGACAO.find((i) => pathname.startsWith(i.caminho))?.rotulo ?? "";
+
+  async function handleSair() {
+    await sair();
+    navigate("/login", { replace: true });
+  }
+
+  return (
+    <div className="tv-root tv-app-shell" style={{ display: "flex", minHeight: "100vh" }}>
+      <aside
+        className="tv-sidebar"
+        style={{
+          width: 236, background: C.sidebar, padding: "22px 14px", display: "flex",
+          flexDirection: "column", flexShrink: 0,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 12px 22px" }}>
+          <div style={{ width: 34, height: 34, borderRadius: "50%", background: C.sidebarSoft, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+            <img
+              src={LOGO_URL}
+              alt="Logo Escola Tom da Vida"
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <p className="tv-serif" style={{ color: "#fff", fontSize: 15, fontWeight: 600, margin: 0, whiteSpace: "nowrap" }}>Tom da Vida</p>
+            <p style={{ color: C.sideTextMuted, fontSize: 11.5, margin: 0 }}>Sistema de planejamento</p>
+          </div>
+        </div>
+
+        <nav className="tv-sidebar-nav" style={{ display: "flex", flexDirection: "column", gap: 2, paddingLeft: 14 }}>
+          {NAVEGACAO.map((item) => {
+            const Icon = item.icone;
+            return (
+              <NavLink
+                key={item.caminho}
+                to={item.caminho}
+                className={({ isActive }) => `tv-nav-item ${isActive ? "active" : ""}`}
+              >
+                <Icon size={16} strokeWidth={2} style={{ flexShrink: 0 }} />
+                <span style={{ whiteSpace: "nowrap" }}>{item.rotulo}</span>
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        <div className="tv-sidebar-footer" style={{ marginTop: "auto", paddingTop: 18, borderTop: `1px solid ${C.sidebarSoft}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 8px" }}>
+            <div style={{ width: 30, height: 30, borderRadius: "50%", background: C.gold, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+              {usuario?.nome[0] ?? "?"}
+            </div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <p style={{ color: "#fff", fontSize: 13, fontWeight: 600, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {usuario?.nome}
+              </p>
+              <p style={{ color: C.sideTextMuted, fontSize: 11.5, margin: 0 }}>{usuario ? ROTULO_PAPEL[usuario.papel] : ""}</p>
+            </div>
+            <button onClick={handleSair} aria-label="Sair" style={{ background: "none", border: "none", color: C.sideTextMuted, cursor: "pointer", padding: 4 }}>
+              <LogOut size={16} />
+            </button>
+          </div>
+        </div>
+      </aside>
+
+
+      <main className="tv-scroll" style={{ flex: 1, padding: "30px 36px", overflowY: "auto" }}>
+        <h1 className="tv-serif" style={{ fontSize: 26, fontWeight: 600, color: C.ink, margin: "0 0 22px" }}>
+          {titulo}
+        </h1>
+        <Outlet />
+      </main>
+    </div>
+  );
+}
