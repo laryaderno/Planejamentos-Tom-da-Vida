@@ -1,65 +1,97 @@
-import { Plus, Trash2 } from "lucide-react";
+import { Users } from "lucide-react";
 import { useState } from "react";
-import { useDadosPrototipo } from "@/mocks/DadosPrototipoContext";
+import { Aviso } from "@/components/Aviso";
+import { EmptyState } from "@/components/EmptyState";
+import { Carregando } from "@/components/TelaCarregando";
+import {
+  etapasDoUsuario,
+  paraEntrada,
+  useCatalogo,
+  usePerfis,
+  useRecarregar,
+  useVinculos,
+  type Perfil,
+} from "@/lib/consultas";
+import { mensagemDeErro, verificar } from "@/lib/erros";
+import { podeGerenciarUsuario } from "@/lib/papeis";
+import { supabase } from "@/lib/supabase";
+import { useUsuario } from "@/features/auth/AuthContext";
 import { C } from "@/styles/tokens";
-import type { Professor } from "@/types/dominio";
+import { BotoesUsuario } from "./acoes";
+import { EditarVinculosModal } from "./EditarVinculosModal";
+import { RedefinirSenhaModal } from "./RedefinirSenhaModal";
 import { RemoverProfessorModal } from "./RemoverProfessorModal";
+import { resumoTurmas } from "./vinculos";
 
+/** Aba "Professores" (§9): nome e turmas, com gestão de permissões e remoção. */
 export function ProfessoresPage() {
-  const { professores, planejamentos, removerProfessor } = useDadosPrototipo();
-  const [removendo, setRemovendo] = useState<Professor | null>(null);
+  const eu = useUsuario();
+  const perfis = usePerfis();
+  const vinculos = useVinculos();
+  const { catalogo, erro: erroCatalogo } = useCatalogo();
+  const recarregar = useRecarregar();
+  const [editando, setEditando] = useState<Perfil | null>(null);
+  const [removendo, setRemovendo] = useState<Perfil | null>(null);
+  const [senha, setSenha] = useState<Perfil | null>(null);
+
+  const erro = perfis.error ?? vinculos.error ?? erroCatalogo;
+  if (erro) return <Aviso>{mensagemDeErro(erro)}</Aviso>;
+  if (!perfis.data || !vinculos.data || !catalogo) return <Carregando />;
+
+  const todosVinculos = vinculos.data;
+  const professores = perfis.data.filter((p) => p.papel === "professor" && p.status === "ativo");
+  const vinculosDe = (id: string) => todosVinculos.filter((v) => v.usuario_id === id);
+  const turmasDe = (id: string) => resumoTurmas(vinculosDe(id).map(paraEntrada), catalogo);
+
+  if (professores.length === 0) {
+    return <EmptyState icon={Users} title="Nenhum professor ativo." description="Professores aprovados na aba Solicitações aparecem aqui." />;
+  }
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 18 }}>
-        <button className="tv-btn tv-btn-primary" disabled title="Disponível em uma próxima etapa">
-          <Plus size={16} /> Cadastrar professor
-        </button>
-      </div>
-      <div className="tv-card" style={{ overflow: "hidden" }}>
+      <div className="tv-card" style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
           <thead>
             <tr style={{ background: "#F4F1E6", textAlign: "left" }}>
-              {["Nome", "Turmas", "E-mail", ""].map((h) => (
+              {["Nome", "Turmas e disciplinas", "E-mail", ""].map((h) => (
                 <th key={h} style={{ padding: "12px 18px", fontWeight: 600, color: C.inkSoft, fontSize: 12.5 }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {professores.map((p) => (
-              <tr key={p.id} style={{ borderTop: `1px solid ${C.border}` }}>
-                <td style={{ padding: "12px 18px", color: C.ink, fontWeight: 500 }}>{p.nome}</td>
-                <td style={{ padding: "12px 18px", color: C.inkSoft }}>{p.turmas}</td>
-                <td style={{ padding: "12px 18px", color: C.inkSoft }}>{p.email}</td>
-                <td style={{ padding: "12px 18px", textAlign: "right" }}>
-                  <button
-                    className="tv-btn-text-danger"
-                    onClick={() => setRemovendo(p)}
-                    style={{ fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 4 }}
-                  >
-                    <Trash2 size={12} /> Remover
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {professores.length === 0 && (
-              <tr>
-                <td colSpan={4} style={{ padding: "18px", color: C.inkSoft, textAlign: "center" }}>
-                  Nenhum professor cadastrado.
-                </td>
-              </tr>
-            )}
+            {professores.map((p) => {
+              const gerencia = podeGerenciarUsuario(eu, p, etapasDoUsuario(todosVinculos, p.id));
+              return (
+                <tr key={p.id} style={{ borderTop: `1px solid ${C.border}` }}>
+                  <td style={{ padding: "12px 18px", color: C.ink, fontWeight: 500 }}>{p.nome}</td>
+                  <td style={{ padding: "12px 18px", color: C.inkSoft }}>{turmasDe(p.id) || "—"}</td>
+                  <td style={{ padding: "12px 18px", color: C.inkSoft }}>{p.email}</td>
+                  <td style={{ padding: "12px 18px", textAlign: "right" }}>
+                    <BotoesUsuario
+                      onEditar={gerencia ? () => setEditando(p) : undefined}
+                      onSenha={eu.papel === "administrador" ? () => setSenha(p) : undefined}
+                      onRemover={gerencia ? () => setRemovendo(p) : undefined}
+                    />
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
+      {editando && (
+        <EditarVinculosModal perfil={editando} vinculosAtuais={vinculosDe(editando.id)} catalogo={catalogo} onFechar={() => setEditando(null)} />
+      )}
+      {senha && <RedefinirSenhaModal perfil={senha} onFechar={() => setSenha(null)} />}
       {removendo && (
         <RemoverProfessorModal
-          professor={removendo}
-          totalPlanejamentos={planejamentos.filter((pl) => pl.professorId === removendo.id && !pl.arquivadoEm && !pl.excluidoEm).length}
+          nome={removendo.nome}
+          turmas={turmasDe(removendo.id)}
           onCancel={() => setRemovendo(null)}
-          onConfirm={(destino) => {
-            removerProfessor(removendo.id, destino);
+          onConfirm={async (destino) => {
+            verificar(await supabase.rpc("remover_usuario", { p_usuario: removendo.id, p_destino: destino }));
+            await recarregar();
             setRemovendo(null);
           }}
         />

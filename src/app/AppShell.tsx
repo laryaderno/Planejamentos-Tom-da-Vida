@@ -1,20 +1,24 @@
-import { LogOut } from "lucide-react";
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
-import { useAuth } from "@/features/auth/AuthContext";
+import { LogOut, UserCircle } from "lucide-react";
+import { Link, Navigate, NavLink, Outlet, useLocation } from "react-router";
+import { useAuth, useUsuario } from "@/features/auth/AuthContext";
 import { ROTULO_PAPEL } from "@/lib/papeis";
 import { C } from "@/styles/tokens";
 import { LOGO_URL } from "./marca";
-import { NAVEGACAO } from "./navegacao";
+import { itensDoPapel, NAVEGACAO, podeAcessar } from "./navegacao";
 
 export function AppShell() {
-  const { usuario, sair } = useAuth();
-  const navigate = useNavigate();
+  const { sair } = useAuth();
+  const usuario = useUsuario();
   const { pathname } = useLocation();
   const titulo = NAVEGACAO.find((i) => pathname.startsWith(i.caminho))?.rotulo ?? "";
+  const itens = itensDoPapel(usuario.papel).filter((i) => i.caminho !== "/perfil");
+
+  // Rota fora do menu do papel: volta para o início.
+  if (!podeAcessar(usuario.papel, pathname)) return <Navigate to="/" replace />;
 
   async function handleSair() {
+    // Ao sair, a sessão some e a rota protegida leva ao login.
     await sair();
-    navigate("/login", { replace: true });
   }
 
   return (
@@ -41,7 +45,7 @@ export function AppShell() {
         </div>
 
         <nav className="tv-sidebar-nav" style={{ display: "flex", flexDirection: "column", gap: 2, paddingLeft: 14 }}>
-          {NAVEGACAO.map((item) => {
+          {itens.map((item) => {
             const Icon = item.icone;
             return (
               <NavLink
@@ -54,19 +58,23 @@ export function AppShell() {
               </NavLink>
             );
           })}
+          <NavLink to="/perfil" className={({ isActive }) => `tv-nav-item tv-nav-perfil ${isActive ? "active" : ""}`}>
+            <UserCircle size={16} strokeWidth={2} style={{ flexShrink: 0 }} />
+            <span style={{ whiteSpace: "nowrap" }}>Meu perfil</span>
+          </NavLink>
         </nav>
 
         <div className="tv-sidebar-footer" style={{ marginTop: "auto", paddingTop: 18, borderTop: `1px solid ${C.sidebarSoft}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 8px" }}>
             <div style={{ width: 30, height: 30, borderRadius: "50%", background: C.gold, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
-              {usuario?.nome[0] ?? "?"}
+              {usuario.nome[0] ?? "?"}
             </div>
-            <div style={{ minWidth: 0, flex: 1 }}>
+            <Link to="/perfil" title="Meu perfil" style={{ minWidth: 0, flex: 1, textDecoration: "none" }}>
               <p style={{ color: "#fff", fontSize: 13, fontWeight: 600, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {usuario?.nome}
+                {usuario.nome}
               </p>
-              <p style={{ color: C.sideTextMuted, fontSize: 11.5, margin: 0 }}>{usuario ? ROTULO_PAPEL[usuario.papel] : ""}</p>
-            </div>
+              <p style={{ color: C.sideTextMuted, fontSize: 11.5, margin: 0 }}>{ROTULO_PAPEL[usuario.papel]}</p>
+            </Link>
             <button onClick={handleSair} aria-label="Sair" style={{ background: "none", border: "none", color: C.sideTextMuted, cursor: "pointer", padding: 4 }}>
               <LogOut size={16} />
             </button>
