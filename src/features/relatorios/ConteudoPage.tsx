@@ -78,8 +78,8 @@ export function ConteudoPage() {
               onClick={() => setModo(id)}
               style={{
                 fontSize: 12.5, fontWeight: 600, padding: "6px 11px", borderRadius: 999, cursor: "pointer",
-                background: modo === id ? C.sidebar : "transparent", color: modo === id ? "#fff" : C.inkSoft,
-                border: `1px solid ${modo === id ? C.sidebar : C.border}`,
+                background: modo === id ? C.primary : "transparent", color: modo === id ? "#fff" : C.inkSoft,
+                border: `1px solid ${modo === id ? C.primary : C.border}`,
               }}
             >
               {rotulo}
@@ -129,7 +129,7 @@ export function ConteudoPage() {
               <span style={{ color: C.inkSoft }}>{dataModelo(i.data)}</span>
               <span style={{ whiteSpace: "pre-wrap" }}>{i.conteudo || "—"}</span>
               <span style={{ whiteSpace: "pre-wrap", color: C.inkSoft }}>
-                {i.habilidades.length > 0 && <span style={{ color: C.goldDeep }}>{i.habilidades.map((h) => INTELIGENCIAS[h]).join(" · ")}{i.objetivos ? "\n" : ""}</span>}
+                {i.habilidades.length > 0 && <span style={{ color: C.primaryDeep }}>{i.habilidades.map((h) => INTELIGENCIAS[h]).join(" · ")}{i.objetivos ? "\n" : ""}</span>}
                 {i.objetivos}
               </span>
             </div>

@@ -40,8 +40,8 @@ export function BancoAtividadesPage() {
             onClick={() => setAba(id)}
             style={{
               fontSize: 13, fontWeight: 600, padding: "7px 13px", borderRadius: 999, cursor: "pointer",
-              background: aba === id ? C.sidebar : "transparent", color: aba === id ? "#fff" : C.inkSoft,
-              border: `1px solid ${aba === id ? C.sidebar : C.border}`,
+              background: aba === id ? C.primary : "transparent", color: aba === id ? "#fff" : C.inkSoft,
+              border: `1px solid ${aba === id ? C.primary : C.border}`,
             }}
           >
             {rotulo}
@@ -178,10 +178,10 @@ function Pastas({ itens }: { itens: { chave: string; titulo: string; qtd: number
       {itens.map((p) => (
         <button key={p.chave} onClick={p.abrir} className="tv-card" style={{ padding: 18, textAlign: "left", cursor: "pointer" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 9, background: "#F4E7CE", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Folder size={18} color={C.goldDeep} />
+            <div style={{ width: 40, height: 40, borderRadius: 9, background: "#E6F0E9", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Folder size={18} color={C.primaryDeep} />
             </div>
-            <span style={{ fontSize: 11.5, fontWeight: 600, color: C.inkSoft, background: "#EFEAD9", padding: "3px 9px", borderRadius: 999 }}>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: C.inkSoft, background: "#F3F4F6", padding: "3px 9px", borderRadius: 999 }}>
               {p.qtd} {p.qtd === 1 ? "atividade" : "atividades"}
             </span>
           </div>
@@ -220,7 +220,7 @@ function ListaAtividades({
       <div className="tv-card" style={{ overflow: "hidden" }}>
         {atividades.map((a, i) => (
           <div key={a.id} style={{ display: "flex", gap: 12, alignItems: "center", padding: "12px 16px", borderTop: i ? `1px solid ${C.border}` : "none" }}>
-            <FileText size={18} color={C.goldDeep} style={{ flexShrink: 0 }} />
+            <FileText size={18} color={C.primaryDeep} style={{ flexShrink: 0 }} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontSize: 14, fontWeight: 600, color: C.ink, margin: "0 0 3px" }}>{a.titulo}</p>
               <p style={{ fontSize: 12.5, color: C.inkSoft, margin: 0 }}>

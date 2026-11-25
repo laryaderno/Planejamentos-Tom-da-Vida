@@ -52,7 +52,7 @@ export function SolicitacoesPage({ compacto = false }: { compacto?: boolean }) {
             <div>
               <p style={{ fontSize: 14, fontWeight: 600, color: C.ink, margin: "0 0 3px" }}>
                 {s.nome}
-                <span style={{ fontSize: 11.5, fontWeight: 600, color: C.goldDeep, background: "#F4E7CE", padding: "2px 8px", borderRadius: 999, marginLeft: 8 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: C.primaryDeep, background: "#E6F0E9", padding: "2px 8px", borderRadius: 999, marginLeft: 8 }}>
                   {ROTULO_PAPEL[s.papel]}
                 </span>
               </p>

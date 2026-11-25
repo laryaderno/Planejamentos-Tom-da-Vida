@@ -2,6 +2,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { LOGO_URL } from "@/app/marca";
 import { C } from "@/styles/tokens";
+import { FundoVerde } from "./Splash";
 
 /** Moldura comum das telas de login, cadastro e senha. */
 export function TelaAuth({
@@ -21,11 +22,15 @@ export function TelaAuth({
       className="tv-root"
       style={{
         minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-        background: `radial-gradient(circle at 30% 20%, ${C.sidebarSoft} 0%, ${C.sidebar} 55%)`,
-        padding: 24,
+        padding: 24, position: "relative",
       }}
     >
-      <Conteudo onSubmit={onSubmit} className="tv-card" style={{ width: largura, maxWidth: "100%", padding: "34px 30px" }}>
+      <FundoVerde aria-hidden="true" />
+      <Conteudo
+        onSubmit={onSubmit}
+        className="tv-card tv-auth-cartao"
+        style={{ width: largura, maxWidth: "100%", padding: "34px 30px", position: "relative", boxShadow: "0 24px 60px rgba(10,40,20,0.35)" }}
+      >
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 24 }}>
           <div
             style={{

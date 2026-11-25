@@ -92,7 +92,7 @@ export function PrazosPage() {
         <div className="tv-card" style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
             <thead>
-              <tr style={{ background: "#F4F1E6", textAlign: "left" }}>
+              <tr style={{ background: "#F9FAFB", textAlign: "left" }}>
                 {["Período", "Etapa", "Data-limite", "Entregas", ""].map((h) => (
                   <th key={h} style={{ padding: "12px 16px", fontWeight: 600, color: C.inkSoft, fontSize: 12.5 }}>{h}</th>
                 ))}
@@ -105,10 +105,10 @@ export function PrazosPage() {
                 const qtd = contagem(p.id);
                 const temEntregas = qtd.some((x) => x.n > 0);
                 return (
-                  <tr key={p.id} style={{ borderTop: `1px solid ${C.border}`, background: atual ? "#FBF4E7" : undefined }}>
+                  <tr key={p.id} style={{ borderTop: `1px solid ${C.border}`, background: atual ? "#F0F6F2" : undefined }}>
                     <td style={{ padding: "12px 16px", textTransform: "capitalize" }}>
                       {dataCurta(p.inicio)} – {dataCurta(p.fim)}
-                      {atual && <span style={{ textTransform: "none", color: C.goldDeep, fontWeight: 600 }}> · atual</span>}
+                      {atual && <span style={{ textTransform: "none", color: C.primaryDeep, fontWeight: 600 }}> · atual</span>}
                     </td>
                     <td style={{ padding: "12px 16px", color: C.inkSoft }}>{nomeEtapa(p.etapa_id)}</td>
                     <td style={{ padding: "12px 16px", textTransform: "capitalize", color: p.prazo < hoje ? C.inkSoft : C.ink }}>{dataCurta(p.prazo)}</td>

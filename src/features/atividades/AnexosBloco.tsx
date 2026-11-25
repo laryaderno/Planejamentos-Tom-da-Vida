@@ -58,7 +58,7 @@ export function AnexosBloco({ blocoId, etapaId, disciplinaId, editavel }: Props)
         const st = STATUS_ATIVIDADE[a.status];
         return (
           <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 9px", border: `1px solid ${C.border}`, borderRadius: 8, background: "#fff", marginBottom: 6, fontSize: 12.5 }}>
-            <FileText size={15} color={C.goldDeep} style={{ flexShrink: 0 }} />
+            <FileText size={15} color={C.primaryDeep} style={{ flexShrink: 0 }} />
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: "block", fontWeight: 600, color: C.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={a.arquivo_nome}>
                 {a.titulo}

@@ -42,7 +42,7 @@ export function EquipePage() {
       <div className="tv-card" style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
           <thead>
-            <tr style={{ background: "#F4F1E6", textAlign: "left" }}>
+            <tr style={{ background: "#F9FAFB", textAlign: "left" }}>
               {["Nome", "Papel", "Escopo", "E-mail", ""].map((h) => (
                 <th key={h} style={{ padding: "12px 18px", fontWeight: 600, color: C.inkSoft, fontSize: 12.5 }}>{h}</th>
               ))}

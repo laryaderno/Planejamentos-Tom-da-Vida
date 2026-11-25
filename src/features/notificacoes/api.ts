@@ -15,7 +15,7 @@ export type SituacaoEntrega = Database["public"]["Enums"]["situacao_entrega"];
 export const SITUACAO: Record<SituacaoEntrega, { rotulo: string; cor: string; fundo: string }> = {
   antecipado: { rotulo: "Com antecedência", cor: "#3F6136", fundo: "#DDEAD7" },
   no_prazo: { rotulo: "No prazo", cor: "#2F5A78", fundo: "#DCE8F0" },
-  atrasado: { rotulo: "Com atraso", cor: "#B24C3B", fundo: "#F7E3DE" },
+  atrasado: { rotulo: "Com atraso", cor: "#B24C3B", fundo: "#FDECEC" },
 };
 
 export function useNotificacoes() {

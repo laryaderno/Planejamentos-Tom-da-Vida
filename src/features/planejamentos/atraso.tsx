@@ -40,7 +40,7 @@ export function EtiquetaAtrasado({ titulo }: { titulo?: string }) {
   return (
     <span
       title={titulo ?? "Planejamento entregue depois do prazo ou ainda não entregue"}
-      style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: "#B24C3B", padding: "2px 8px", borderRadius: 999, letterSpacing: 0.3 }}
+      style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: "#E5484D", padding: "2px 8px", borderRadius: 6, letterSpacing: 0.3 }}
     >
       Atrasado
     </span>

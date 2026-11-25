@@ -31,7 +31,7 @@ export function PerfilPage() {
     <div style={{ display: "grid", gap: 16, maxWidth: 640 }}>
       <section className="tv-card" style={{ padding: 22 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
-          <div style={{ width: 52, height: 52, borderRadius: "50%", background: C.gold, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, flexShrink: 0 }}>
+          <div style={{ width: 52, height: 52, borderRadius: "50%", background: C.primary, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, flexShrink: 0 }}>
             {eu.nome[0] ?? "?"}
           </div>
           <div style={{ minWidth: 0 }}>

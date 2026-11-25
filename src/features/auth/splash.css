@@ -1,0 +1,85 @@
+/* Fundo verde com quadriculado, granulado e luz filtrada por folhas (splash e telas de login). */
+.tv-fundo-verde {
+  position: fixed; inset: 0; overflow: hidden;
+  background: linear-gradient(165deg, #1d5031 0%, #2a6a3f 42%, #45904c 75%, #86bf5c 100%);
+}
+.tv-fundo-verde::before { /* quadriculado */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(236, 245, 220, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(236, 245, 220, 0.16) 1px, transparent 1px);
+  background-size: 34px 34px;
+}
+.tv-fundo-verde::after { /* granulado */
+  content: ""; position: absolute; inset: -50%; pointer-events: none; opacity: 0.32; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>");
+  animation: tvGrao 1.2s steps(4) infinite;
+}
+@keyframes tvGrao {
+  0% { transform: translate(0, 0); } 25% { transform: translate(-3%, 2%); }
+  50% { transform: translate(2%, -3%); } 75% { transform: translate(-2%, -1%); } 100% { transform: translate(0, 0); }
+}
+
+/* Faixas de luz desfocadas, que balançam devagar como sombra de folhas. */
+.tv-luz {
+  position: absolute; pointer-events: none; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(196, 238, 126, 0.6), rgba(196, 238, 126, 0) 100%);
+  filter: blur(22px);
+}
+.tv-luz-1 { width: 70vmax; height: 26vmax; left: -22vmax; top: 6vh; transform: rotate(58deg); animation: tvBalanco1 13s ease-in-out infinite alternate; }
+.tv-luz-2 { width: 60vmax; height: 22vmax; right: -24vmax; bottom: 4vh; transform: rotate(62deg); animation: tvBalanco2 16s ease-in-out infinite alternate; }
+.tv-sombra {
+  position: absolute; pointer-events: none; width: 50vmax; height: 14vmax; left: 10vw; top: 38vh;
+  background: radial-gradient(closest-side, rgba(10, 40, 20, 0.45), rgba(10, 40, 20, 0));
+  filter: blur(26px); transform: rotate(60deg); animation: tvBalanco3 18s ease-in-out infinite alternate;
+}
+@keyframes tvBalanco1 { to { transform: rotate(52deg) translate(6vmax, 3vmax); } }
+@keyframes tvBalanco2 { to { transform: rotate(68deg) translate(-5vmax, -2vmax); } }
+@keyframes tvBalanco3 { to { transform: rotate(66deg) translate(4vmax, -3vmax); } }
+
+/* Splash */
+.tv-splash {
+  z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 32px 28px; cursor: pointer; text-align: center; color: #ece9e2;
+  font-family: "Fredoka", "Inter", system-ui, sans-serif;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.tv-splash.saindo { opacity: 0; transform: scale(1.04); }
+.tv-splash > :not(.tv-luz):not(.tv-sombra) { position: relative; z-index: 1; }
+
+.tv-splash-logo {
+  width: 76px; height: 76px; border-radius: 50%; background: #f6f4ee; padding: 5px; margin-bottom: 34px;
+  box-shadow: 0 8px 30px rgba(10, 40, 20, 0.35); opacity: 0;
+  animation: tvSurgir 0.9s 0.1s cubic-bezier(.2, .8, .2, 1) forwards, tvFlutuar 5s 1s ease-in-out infinite;
+}
+.tv-splash-logo img { width: 100%; height: 100%; object-fit: contain; }
+
+.tv-splash-versiculo {
+  max-width: 760px; margin: 0; font-weight: 600; line-height: 1.22;
+  font-size: clamp(28px, 5.4vw, 54px); letter-spacing: -0.01em;
+  text-shadow: 0 2px 18px rgba(10, 40, 20, 0.25);
+}
+.tv-splash-palavra { display: inline-block; opacity: 0; animation: tvPalavra 0.7s cubic-bezier(.2, .8, .2, 1) forwards; }
+@keyframes tvPalavra {
+  from { opacity: 0; transform: translateY(14px) rotate(-3deg); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+.tv-splash-referencia {
+  margin: 22px 0 0; font-size: clamp(15px, 2.2vw, 19px); font-weight: 500; letter-spacing: 0.04em;
+  color: #d6eac0; opacity: 0; animation: tvSurgir 0.8s cubic-bezier(.2, .8, .2, 1) forwards;
+}
+.tv-splash-convite {
+  position: absolute !important; bottom: max(34px, env(safe-area-inset-bottom)); left: 0; right: 0;
+  margin: 0; font-size: 14.5px; font-weight: 500; letter-spacing: 0.03em; color: #ece9e2; opacity: 0;
+  animation: tvSurgir 0.8s forwards, tvPulsar 2.4s 0.8s ease-in-out infinite;
+}
+@keyframes tvSurgir { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes tvFlutuar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes tvPulsar { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tv-fundo-verde::after, .tv-luz, .tv-sombra, .tv-splash-logo { animation: none !important; }
+  .tv-splash-logo, .tv-splash-palavra, .tv-splash-referencia, .tv-splash-convite { animation: none !important; opacity: 1 !important; }
+}
+
+.tv-auth-cartao { animation: tvSurgir 0.6s cubic-bezier(.2, .8, .2, 1); }

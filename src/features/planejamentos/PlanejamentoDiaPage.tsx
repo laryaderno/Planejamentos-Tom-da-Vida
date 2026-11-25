@@ -140,8 +140,8 @@ export function PlanejamentoDiaPage() {
                 to={`${base}/${data}/${t}`}
                 style={{
                   fontSize: 12.5, fontWeight: 600, padding: "6px 11px", borderRadius: 999, textDecoration: "none",
-                  background: t === turno ? C.sidebar : "transparent", color: t === turno ? "#fff" : C.inkSoft,
-                  border: `1px solid ${t === turno ? C.sidebar : C.border}`,
+                  background: t === turno ? C.primary : "transparent", color: t === turno ? "#fff" : C.inkSoft,
+                  border: `1px solid ${t === turno ? C.primary : C.border}`,
                 }}
               >
                 {ROTULO_TURNO[t]}
@@ -170,7 +170,7 @@ export function PlanejamentoDiaPage() {
       {!semAula && pendentes.length > 0 && (
         <section className="tv-card" style={{ padding: 16 }}>
           <h2 style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 14, fontWeight: 600, margin: "0 0 10px" }}>
-            <Clock size={15} color={C.goldDeep} /> Horários da grade ainda sem planejamento
+            <Clock size={15} color={C.primaryDeep} /> Horários da grade ainda sem planejamento
           </h2>
           {pendentes.map((h) => {
             const meu = h.professor_id === eu.id;
@@ -196,7 +196,7 @@ export function PlanejamentoDiaPage() {
       {blocos.map((b) => {
         const meu = b.professor_id === eu.id && !b.arquivado_em;
         return (
-          <section key={b.id} className="tv-card" style={{ padding: 18, borderLeft: `4px solid ${meu ? C.gold : C.border}` }}>
+          <section key={b.id} className="tv-card" style={{ padding: 18, borderLeft: `4px solid ${meu ? C.primary : C.border}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>
               <div>
                 <p style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>
@@ -210,7 +210,7 @@ export function PlanejamentoDiaPage() {
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 {b.arquivado_em && (
-                  <span style={{ display: "inline-flex", gap: 4, alignItems: "center", fontSize: 11.5, color: C.inkSoft, background: "#EFEAD9", padding: "3px 8px", borderRadius: 999 }}>
+                  <span style={{ display: "inline-flex", gap: 4, alignItems: "center", fontSize: 11.5, color: C.inkSoft, background: "#F3F4F6", padding: "3px 8px", borderRadius: 999 }}>
                     <Archive size={11} /> Arquivado em {formatarData(b.arquivado_em)}
                   </span>
                 )}

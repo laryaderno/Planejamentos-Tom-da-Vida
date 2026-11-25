@@ -42,7 +42,7 @@ export function Notas({
   return (
     <section className="tv-card" style={{ padding: 18 }}>
       <h2 style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 15, fontWeight: 600, margin: "0 0 12px" }}>
-        <MessageSquare size={16} color={C.goldDeep} /> Notas
+        <MessageSquare size={16} color={C.primaryDeep} /> Notas
       </h2>
       {notas.length === 0 && <p style={{ fontSize: 13, color: C.inkSoft, margin: "0 0 12px" }}>Nenhuma nota ainda.</p>}
       <ul style={{ listStyle: "none", padding: 0, margin: "0 0 12px" }}>

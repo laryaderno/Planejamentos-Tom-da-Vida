@@ -8,9 +8,9 @@ interface AvisoProps {
 }
 
 const ESTILO = {
-  erro: { fundo: "#F7E3DE", cor: C.red, Icone: AlertTriangle },
+  erro: { fundo: "#FDECEC", cor: C.red, Icone: AlertTriangle },
   sucesso: { fundo: "#E6EEE3", cor: "#3F6136", Icone: CheckCircle2 },
-  info: { fundo: "#F4E7CE", cor: C.goldDeep, Icone: AlertTriangle },
+  info: { fundo: "#E6F0E9", cor: C.primaryDeep, Icone: AlertTriangle },
 } as const;
 
 export function Aviso({ tipo = "erro", children }: AvisoProps) {

@@ -47,7 +47,7 @@ export function PrazoDaSemana({ turmaId, etapaId, inicio, fim }: { turmaId: numb
   return (
     <div className="tv-card" style={{ padding: "12px 14px", marginBottom: 14 }}>
       <span style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13.5 }}>
-        <CalendarClock size={16} color={C.goldDeep} />
+        <CalendarClock size={16} color={C.primaryDeep} />
         <span>
           Período <strong style={{ textTransform: "capitalize" }}>{dataCurta(periodo.inicio)} – {dataCurta(periodo.fim)}</strong> · entrega até{" "}
           <strong style={{ textTransform: "capitalize", color: vencido ? C.red : C.ink }}>{dataCurta(periodo.prazo)}</strong>

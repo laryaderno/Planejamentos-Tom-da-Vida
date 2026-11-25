@@ -82,7 +82,7 @@ export function EmailsAutomaticos() {
     <section>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
         <h2 style={{ display: "flex", gap: 7, alignItems: "center", fontSize: 15, fontWeight: 600, margin: 0 }}>
-          <Mail size={16} color={C.goldDeep} /> E-mails automáticos
+          <Mail size={16} color={C.primaryDeep} /> E-mails automáticos
         </h2>
         <button className="tv-btn tv-btn-secondary" onClick={enviarAgora} disabled={enviando || !c.emails_ativos} title="Normalmente roda sozinho todo dia às 7h.">
           <Send size={14} /> {enviando ? "Enviando…" : "Enviar agora"}
@@ -129,7 +129,7 @@ export function EmailsAutomaticos() {
         <div className="tv-card" style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
             <thead>
-              <tr style={{ background: "#F4F1E6", textAlign: "left" }}>
+              <tr style={{ background: "#F9FAFB", textAlign: "left" }}>
                 {["Quando", "Para", "Assunto", "Situação"].map((h) => (
                   <th key={h} style={{ padding: "9px 12px", fontWeight: 600, color: C.inkSoft }}>{h}</th>
                 ))}

@@ -54,7 +54,7 @@ export function BannerConexao() {
         </div>
       )}
       {comErro.map((p) => (
-        <div key={p.chave} role="alert" style={{ ...faixa, background: "#F7E3DE", color: C.red }}>
+        <div key={p.chave} role="alert" style={{ ...faixa, background: "#FDECEC", color: C.red }}>
           <AlertTriangle size={16} /> Uma alteração não pôde ser salva: {p.erro}
           <button className="tv-btn-text" style={{ fontWeight: 600 }} onClick={() => setVendo(p)}>Ver o que foi digitado</button>
           <button className="tv-btn-text-danger" style={{ fontWeight: 600 }} onClick={() => setDescartando(p)}>Descartar</button>
