@@ -27,6 +27,8 @@ interface Auth {
   carregando: boolean;
   sessao: Session | null;
   usuario: Usuario | null;
+  /** Não foi possível carregar o perfil (ex.: sem internet e sem cópia local). */
+  erroPerfil: unknown;
   /** O usuário chegou pelo link de redefinição de senha. */
   recuperandoSenha: boolean;
   entrar: (email: string, senha: string) => Promise<void>;
@@ -89,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     carregando: !sessaoCarregada || (!!sessao && perfil.isPending),
     sessao,
     usuario: perfil.data ?? null,
+    erroPerfil: perfil.data ? null : perfil.error,
     recuperandoSenha,
 
     async entrar(email, senha) {

@@ -1,16 +1,27 @@
 import { LogOut, UserCircle } from "lucide-react";
 import { Link, Navigate, NavLink, Outlet, useLocation } from "react-router";
 import { BannerConexao } from "@/components/BannerConexao";
-import { useAuth, useUsuario } from "@/features/auth/AuthContext";
+import { useUsuario } from "@/features/auth/AuthContext";
+import { SincronizacaoProvider } from "@/lib/offline/SincronizacaoContext";
+import { useSair } from "@/lib/offline/useSair";
 import { useContadorNotificacoes } from "@/features/notificacoes/api";
 import { ROTULO_PAPEL } from "@/lib/papeis";
 import { C } from "@/styles/tokens";
 import { LOGO_URL } from "./marca";
 import { itensDoPapel, NAVEGACAO, podeAcessar } from "./navegacao";
 
+/** Layout das telas internas; mantém a fila de alterações sendo enviada. */
 export function AppShell() {
-  const { sair } = useAuth();
+  return (
+    <SincronizacaoProvider>
+      <Moldura />
+    </SincronizacaoProvider>
+  );
+}
+
+function Moldura() {
   const usuario = useUsuario();
+  const { pedirSaida, modal: modalSaida } = useSair();
   const { pathname } = useLocation();
   const titulo = NAVEGACAO.find((i) => pathname.startsWith(i.caminho))?.rotulo ?? "";
   const contador = useContadorNotificacoes();
@@ -19,10 +30,6 @@ export function AppShell() {
   // Rota fora do menu do papel: volta para o início.
   if (!podeAcessar(usuario.papel, pathname)) return <Navigate to="/" replace />;
 
-  async function handleSair() {
-    // Ao sair, a sessão some e a rota protegida leva ao login.
-    await sair();
-  }
 
   return (
     <div className="tv-root tv-app-shell" style={{ display: "flex", minHeight: "100vh" }}>
@@ -86,7 +93,7 @@ export function AppShell() {
               </p>
               <p style={{ color: C.sideTextMuted, fontSize: 11.5, margin: 0 }}>{ROTULO_PAPEL[usuario.papel]}</p>
             </Link>
-            <button onClick={handleSair} aria-label="Sair" style={{ background: "none", border: "none", color: C.sideTextMuted, cursor: "pointer", padding: 4 }}>
+            <button onClick={pedirSaida} aria-label="Sair" style={{ background: "none", border: "none", color: C.sideTextMuted, cursor: "pointer", padding: 4 }}>
               <LogOut size={16} />
             </button>
           </div>
@@ -101,6 +108,7 @@ export function AppShell() {
         </h1>
         <Outlet />
       </main>
+      {modalSaida}
     </div>
   );
 }
