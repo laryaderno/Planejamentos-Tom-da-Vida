@@ -88,7 +88,7 @@ function CartaoPendente({
   return (
     <div className="tv-card" style={{ padding: 14 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "flex-start", flexWrap: "wrap" }}>
-        <FileText size={18} color={C.goldDeep} style={{ marginTop: 2 }} />
+        <FileText size={18} color={C.primaryDeep} style={{ marginTop: 2 }} />
         <div style={{ flex: 1, minWidth: 220 }}>
           <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "0 0 8px" }}>
             <strong style={{ color: C.ink }}>{professor}</strong> · {disciplina}

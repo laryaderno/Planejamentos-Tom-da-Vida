@@ -84,8 +84,8 @@ export function RemoverProfessorModal({ nome, turmas, onCancel, onConfirm }: Pro
               key={valor}
               style={{
                 display: "flex", gap: 12, padding: 12, borderRadius: 9, cursor: "pointer",
-                border: `1.5px solid ${ativo ? (perigo ? C.red : C.gold) : C.border}`,
-                background: ativo ? (perigo ? "#FBEFEC" : "#FBF4E7") : "#fff",
+                border: `1.5px solid ${ativo ? (perigo ? C.red : C.primary) : C.border}`,
+                background: ativo ? (perigo ? "#FDECEC" : "#F0F6F2") : "#fff",
               }}
             >
               <input
@@ -94,7 +94,7 @@ export function RemoverProfessorModal({ nome, turmas, onCancel, onConfirm }: Pro
                 value={valor}
                 checked={ativo}
                 onChange={() => setDestino(valor)}
-                style={{ marginTop: 3, accentColor: perigo ? C.red : C.gold }}
+                style={{ marginTop: 3, accentColor: perigo ? C.red : C.primary }}
               />
               <span>
                 <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 600, color: perigo ? C.red : C.ink }}>

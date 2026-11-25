@@ -28,7 +28,7 @@ export function AguardandoPage() {
   return (
     <TelaAuth>
       <div style={{ textAlign: "center" }}>
-        <Icone size={28} color={pendente ? C.gold : C.red} />
+        <Icone size={28} color={pendente ? C.primary : C.red} />
         <p style={{ fontSize: 16, fontWeight: 600, color: C.ink, margin: "10px 0 8px" }}>{titulo}</p>
         <p style={{ fontSize: 13.5, color: C.inkSoft, lineHeight: 1.6, margin: "0 0 20px" }}>{texto}</p>
         {usuario && <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "0 0 18px" }}>{usuario.email}</p>}

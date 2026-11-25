@@ -92,12 +92,12 @@ export function NotificacoesPage() {
                   style={{
                     display: "flex", gap: 12, alignItems: "flex-start", width: "100%", textAlign: "left", cursor: "pointer",
                     padding: "13px 16px", border: "none", borderTop: i === 0 ? "none" : `1px solid ${C.border}`,
-                    background: n.lida_em ? "transparent" : "#FBF4E7",
+                    background: n.lida_em ? "transparent" : "#F0F6F2",
                   }}
                 >
                   <span
                     aria-label={n.lida_em ? "Lida" : "Não lida"}
-                    style={{ width: 8, height: 8, borderRadius: "50%", marginTop: 6, flexShrink: 0, background: n.lida_em ? "transparent" : C.gold }}
+                    style={{ width: 8, height: 8, borderRadius: "50%", marginTop: 6, flexShrink: 0, background: n.lida_em ? "transparent" : C.primary }}
                   />
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 3 }}>

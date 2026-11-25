@@ -113,5 +113,5 @@ export async function removerAtividade(a: Pick<Atividade, "id" | "arquivo_caminh
 export const STATUS_ATIVIDADE = {
   pendente: { rotulo: "Aguardando aprovação", cor: "#8A6512", fundo: "#F6E7BF" },
   aprovada: { rotulo: "No banco de atividades", cor: "#3F6136", fundo: "#DDEAD7" },
-  recusada: { rotulo: "Não aprovada", cor: "#B24C3B", fundo: "#F7E3DE" },
+  recusada: { rotulo: "Não aprovada", cor: "#B24C3B", fundo: "#FDECEC" },
 } as const;

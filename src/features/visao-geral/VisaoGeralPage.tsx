@@ -1,29 +1,21 @@
 import type { LucideIcon } from "lucide-react";
 import { AlertTriangle, Archive, BarChart3, Bell, GraduationCap, Users } from "lucide-react";
 import type { ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { useUsuario } from "@/features/auth/AuthContext";
 import { useEtapas, usePerfis, useTurmas } from "@/lib/consultas";
 import { podeAprovar } from "@/lib/papeis";
 import { useAtividades } from "@/features/atividades/api";
-import { hojeISO, somarDias } from "@/features/planejamentos/dominio";
-import { verificar } from "@/lib/erros";
-import { supabase } from "@/lib/supabase";
+import { AvisoAtrasosGestao, useEntregasUltimos30Dias } from "@/features/planejamentos/AvisoPrazo";
 import { C } from "@/styles/tokens";
 
 /** Entregas cujo prazo venceu nos últimos 30 dias: quantas saíram no prazo (ou antes). */
 function useEntregasNoPrazo() {
-  const hoje = hojeISO();
-  return useQuery({
-    queryKey: ["relatorio-entregas", "30-dias", hoje],
-    queryFn: async () => {
-      const linhas = verificar(await supabase.rpc("relatorio_entregas", { p_inicio: somarDias(hoje, -30), p_fim: somarDias(hoje, -1) }));
-      const emDia = linhas.reduce((n, l) => n + l.antecipado + l.no_prazo, 0);
-      const total = linhas.reduce((n, l) => n + l.antecipado + l.no_prazo + l.atrasado + l.nao_entregue, 0);
-      return { emDia, total };
-    },
-  });
+  const r = useEntregasUltimos30Dias();
+  if (!r.data) return { data: undefined };
+  const emDia = r.data.reduce((n, l) => n + l.antecipado + l.no_prazo, 0);
+  const total = r.data.reduce((n, l) => n + l.antecipado + l.no_prazo + l.atrasado + l.nao_entregue, 0);
+  return { data: { emDia, total } };
 }
 
 export function VisaoGeralPage() {
@@ -45,10 +37,11 @@ export function VisaoGeralPage() {
 
   return (
     <div>
-      <p style={{ fontSize: 14, color: C.inkSoft, margin: "-8px 0 22px", maxWidth: 560, lineHeight: 1.6 }}>
+      <p style={{ fontSize: 14, color: C.inkSoft, margin: "0 0 22px", maxWidth: 560, lineHeight: 1.6 }}>
         Olá, {eu.nome.split(" ")[0]}. Acompanhe suas turmas, sua equipe e o banco de atividades em um só lugar.
       </p>
 
+      <AvisoAtrasosGestao />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
         <DashboardCard
           icon={GraduationCap}
@@ -76,7 +69,7 @@ export function VisaoGeralPage() {
             <>
               <p className="tv-serif" style={{ fontSize: 30, fontWeight: 600, color: C.ink, margin: "4px 0 8px" }}>{percentual}%</p>
               <div style={{ height: 6, borderRadius: 3, background: C.border, overflow: "hidden" }}>
-                <div style={{ width: `${percentual}%`, height: "100%", background: C.gold }} />
+                <div style={{ width: `${percentual}%`, height: "100%", background: C.primary }} />
               </div>
               <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "8px 0 0" }}>
                 {noPrazo.data.emDia} de {noPrazo.data.total} {noPrazo.data.total === 1 ? "entrega esperada saiu" : "entregas esperadas saíram"} no prazo ou antes
@@ -133,11 +126,11 @@ function DashboardCard({ icon: Icon, title, description, badge, onClick, childre
       style={{ padding: 22, cursor: onClick ? "pointer" : "default" }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
-        <div style={{ width: 42, height: 42, borderRadius: 10, background: "#F4E7CE", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <Icon size={19} color={C.goldDeep} />
+        <div style={{ width: 42, height: 42, borderRadius: 10, background: "#E6F0E9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Icon size={19} color={C.primaryDeep} />
         </div>
         {badge && (
-          <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: C.red, background: "#F7E3DE", padding: "5px 10px", borderRadius: 999 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: C.red, background: "#FDECEC", padding: "5px 10px", borderRadius: 999 }}>
             <AlertTriangle size={12} /> {badge}
           </span>
         )}

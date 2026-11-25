@@ -27,7 +27,7 @@ export async function gerarPdf(doc: Documento, logo: ArrayBuffer | null): Promis
 
   const tabela = (tb: Tabela): Content => {
     const soma = tb.larguras.reduce((a, b) => a + b, 0);
-    const cabecalho: TableCell[] = tb.cabecalho.map((h) => ({ text: h, bold: true, fillColor: "#EFEAD9", alignment: "center" }));
+    const cabecalho: TableCell[] = tb.cabecalho.map((h) => ({ text: h, bold: true, fillColor: "#F3F4F6", alignment: "center" }));
     const corpo: TableCell[][] = tb.linhas.map((l) => {
       const fundo = l.estilo === "rotina" ? "#F3F2EE" : undefined;
       const celulas: TableCell[] = [];

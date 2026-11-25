@@ -187,10 +187,10 @@ function TurmaCard({
 }) {
   const matutino = turma.turno_padrao === "matutino";
   return (
-    <div className="tv-card" style={{ width: 180, padding: 14, borderTop: `3px solid ${matutino ? C.amber : C.sidebarSoft}` }}>
+    <div className="tv-card" style={{ width: 180, padding: 14, borderTop: `3px solid ${matutino ? C.amber : C.primary}` }}>
       <p style={{ fontSize: 14.5, fontWeight: 600, color: C.ink, margin: "0 0 4px" }}>{turma.nome}</p>
       <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "0 0 2px", display: "flex", alignItems: "center", gap: 5 }}>
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: matutino ? C.amber : C.sidebarSoft, display: "inline-block" }} />
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: matutino ? C.amber : C.primary, display: "inline-block" }} />
         {ROTULO_TURNO[turma.turno_padrao]}
       </p>
       <p style={{ fontSize: 12.5, color: C.inkSoft, margin: "0 0 10px" }}>
@@ -286,9 +286,9 @@ function TurmaModal({
             className="tv-btn"
             style={{
               flex: 1,
-              background: form.turno === turno ? C.sidebar : "transparent",
+              background: form.turno === turno ? C.primary : "transparent",
               color: form.turno === turno ? "#fff" : C.ink,
-              border: `1px solid ${form.turno === turno ? C.sidebar : C.border}`,
+              border: `1px solid ${form.turno === turno ? C.primary : C.border}`,
             }}
           >
             {ROTULO_TURNO[turno]}

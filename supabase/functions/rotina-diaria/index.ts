@@ -51,17 +51,17 @@ function escapar(t: string): string {
 
 function html(e: Email): string {
   const link = e.link ? `${URL_APP}${e.link}` : URL_APP;
-  return `<!doctype html><html lang="pt-BR"><body style="margin:0;background:#F1EEE2;font-family:Arial,Helvetica,sans-serif;color:#1E2A28">
+  return `<!doctype html><html lang="pt-BR"><body style="margin:0;background:#F5F5F5;font-family:Inter,Arial,Helvetica,sans-serif;color:#1F2937">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px"><tr><td align="center">
-    <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#FCFBF6;border:1px solid #DBD5C2;border-radius:10px">
+    <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:10px">
       <tr><td style="padding:22px 26px 6px"><img src="${URL_APP}/logo-tom-da-vida.png" width="64" height="64" alt="Escola Tom da Vida"></td></tr>
       <tr><td style="padding:6px 26px 0"><h1 style="font-size:18px;margin:0 0 12px">${escapar(e.assunto)}</h1></td></tr>
       <tr><td style="padding:0 26px;font-size:14px;line-height:1.6">
         <p style="margin:0 0 12px">Olá, ${escapar(e.nome.split(" ")[0] ?? e.nome)}.</p>
         <p style="margin:0 0 18px">${escapar(e.texto)}</p>
-        <p style="margin:0 0 22px"><a href="${escapar(link)}" style="background:#BD8236;color:#fff;text-decoration:none;padding:10px 18px;border-radius:7px;font-weight:bold;display:inline-block">Abrir no sistema</a></p>
+        <p style="margin:0 0 22px"><a href="${escapar(link)}" style="background:#6B9C7A;color:#fff;text-decoration:none;padding:10px 18px;border-radius:7px;font-weight:bold;display:inline-block">Abrir no sistema</a></p>
       </td></tr>
-      <tr><td style="padding:14px 26px 20px;border-top:1px solid #DBD5C2;font-size:12px;color:#54615C">
+      <tr><td style="padding:14px 26px 20px;border-top:1px solid #E5E7EB;font-size:12px;color:#6B7280">
         Sistema de Planejamento de Aulas — Escola Tom da Vida. Mensagem automática, não responda.
       </td></tr>
     </table>

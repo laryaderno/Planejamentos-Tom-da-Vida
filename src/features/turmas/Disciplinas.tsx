@@ -17,7 +17,7 @@ export function Disciplinas() {
     <section>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <h2 style={{ display: "flex", gap: 7, alignItems: "center", fontSize: 15, fontWeight: 600, margin: 0 }}>
-          <BookMarked size={16} color={C.goldDeep} /> Disciplinas
+          <BookMarked size={16} color={C.primaryDeep} /> Disciplinas
         </h2>
         <button className="tv-btn tv-btn-secondary" onClick={() => setEditando({ id: null, nome: "" })}>
           <Plus size={14} /> Nova disciplina

@@ -13,6 +13,7 @@ import { NIVEL } from "@/lib/papeis";
 import { C } from "@/styles/tokens";
 import { usePlanejamentosSemana } from "./api";
 import { dataCurta, deISO, hojeISO, inicioDaSemana, somarDias, statusDoDia } from "./dominio";
+import { AvisoPrazoProfessor } from "./AvisoPrazo";
 import { PrazoDaSemana } from "./PrazoDaSemana";
 import { StatusChip } from "./StatusChip";
 
@@ -74,6 +75,7 @@ export function PlanejamentosPage() {
 
   return (
     <div>
+      <AvisoPrazoProfessor />
       <div className="tv-card" style={{ padding: 14, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
         <label style={{ fontSize: 13, fontWeight: 600 }} htmlFor="sel-turma">Turma</label>
         <select id="sel-turma" className="tv-input" style={{ width: "auto", minWidth: 200 }} value={turma?.id ?? ""} onChange={(e) => ir({ turma: e.target.value })}>
@@ -113,10 +115,10 @@ export function PlanejamentosPage() {
             const semAula = diasSemAula.data?.find((d) => d.data === dia && (d.etapa_id === null || d.etapa_id === turma.etapa_id));
             const turnos = [...new Set([turma.turno_padrao, ...doDia.map((p) => p.turno)])];
             return (
-              <div key={dia} className="tv-card" style={{ padding: 14, borderColor: dia === hoje ? C.gold : undefined }}>
+              <div key={dia} className="tv-card" style={{ padding: 14, borderColor: dia === hoje ? C.primary : undefined }}>
                 <p style={{ fontSize: 13.5, fontWeight: 600, color: C.ink, margin: "0 0 10px", textTransform: "capitalize" }}>
                   {dataCurta(dia)}
-                  {dia === hoje && <span style={{ color: C.goldDeep, fontWeight: 500 }}> · hoje</span>}
+                  {dia === hoje && <span style={{ color: C.primaryDeep, fontWeight: 500 }}> · hoje</span>}
                 </p>
                 {semAula && doDia.length === 0 ? (
                   <p style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 12.5, color: C.inkSoft, margin: 0, padding: "9px 0" }}>

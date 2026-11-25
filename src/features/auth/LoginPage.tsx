@@ -4,6 +4,7 @@ import { Aviso } from "@/components/Aviso";
 import { TelaCarregando } from "@/components/TelaCarregando";
 import { mensagemDeErro } from "@/lib/erros";
 import { useAuth } from "./AuthContext";
+import { Splash, splashJaVista } from "./Splash";
 import { Campo, CampoSenha, TelaAuth, estiloLink } from "./TelaAuth";
 
 export function LoginPage() {
@@ -12,6 +13,7 @@ export function LoginPage() {
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [splash, setSplash] = useState(() => !splashJaVista());
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -31,6 +33,7 @@ export function LoginPage() {
 
   if (carregando) return <TelaCarregando />;
   if (sessao) return <Navigate to="/" replace />;
+  if (splash) return <Splash aoEntrar={() => setSplash(false)} />;
 
   return (
     <TelaAuth onSubmit={submit}>

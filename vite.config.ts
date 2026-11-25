@@ -18,8 +18,8 @@ export default defineConfig({
         lang: "pt-BR",
         start_url: "/",
         display: "standalone",
-        background_color: "#F1EEE2",
-        theme_color: "#173130",
+        background_color: "#F5F5F5",
+        theme_color: "#6B9C7A",
         icons: [{ src: "favicon.svg", sizes: "any", type: "image/svg+xml" }],
       },
       workbox: {

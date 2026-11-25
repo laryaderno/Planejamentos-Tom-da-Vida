@@ -48,10 +48,10 @@ export function MeusHorariosPage() {
           const data = somarDias(segunda, i);
           const doDia = atuais.filter((h) => h.dia_semana === dia);
           return (
-            <div key={dia} className="tv-card" style={{ padding: 12, borderColor: data === hoje ? C.gold : undefined }}>
+            <div key={dia} className="tv-card" style={{ padding: 12, borderColor: data === hoje ? C.primary : undefined }}>
               <p style={{ fontSize: 13.5, fontWeight: 600, margin: "0 0 8px" }}>
                 {nomeDia}
-                {data === hoje && <span style={{ color: C.goldDeep, fontWeight: 500 }}> · hoje</span>}
+                {data === hoje && <span style={{ color: C.primaryDeep, fontWeight: 500 }}> · hoje</span>}
               </p>
               {doDia.length === 0 && <p style={{ fontSize: 12.5, color: C.inkSoft, margin: 0 }}>Sem aulas</p>}
               {doDia.map((h) => (

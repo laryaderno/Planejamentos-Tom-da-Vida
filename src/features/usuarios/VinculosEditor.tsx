@@ -94,13 +94,13 @@ function EditorTurmas({ valor, onChange, catalogo, etapasEditaveis }: EditorProp
             <button
               type="button"
               onClick={() => setAbertas((s) => { const n = new Set(s); if (n.has(etapa.id)) n.delete(etapa.id); else n.add(etapa.id); return n; })}
-              style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", background: "#F8F6EE", border: "none", cursor: "pointer", textAlign: "left" }}
+              style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", background: "#F9FAFB", border: "none", cursor: "pointer", textAlign: "left" }}
             >
               <span style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 13.5, fontWeight: 600, color: editavel ? C.ink : C.inkSoft }}>
                 {aberta ? <ChevronDown size={14} /> : <ChevronRight size={14} />} {etapa.nome}
                 {!editavel && <span style={{ fontWeight: 400, fontSize: 12 }}>(fora do seu escopo)</span>}
               </span>
-              {qtd > 0 && <span style={{ fontSize: 12, color: C.goldDeep }}>{qtd} selecionado{qtd > 1 ? "s" : ""}</span>}
+              {qtd > 0 && <span style={{ fontSize: 12, color: C.primaryDeep }}>{qtd} selecionado{qtd > 1 ? "s" : ""}</span>}
             </button>
 
             {aberta && (
@@ -150,8 +150,8 @@ function EditorTurmas({ valor, onChange, catalogo, etapasEditaveis }: EditorProp
                               onClick={() => alternarDisciplina(etapa.id, t.id, d.id)}
                               style={{
                                 fontSize: 12, padding: "4px 9px", borderRadius: 999, cursor: editavel ? "pointer" : "not-allowed",
-                                border: `1px solid ${on ? C.gold : C.border}`, background: on ? "#F4E7CE" : "#fff",
-                                color: on ? C.goldDeep : C.inkSoft, fontWeight: on ? 600 : 400,
+                                border: `1px solid ${on ? C.primary : C.border}`, background: on ? "#E6F0E9" : "#fff",
+                                color: on ? C.primaryDeep : C.inkSoft, fontWeight: on ? 600 : 400,
                               }}
                             >
                               {d.nome}

@@ -171,8 +171,8 @@ export function BlocoEditor({ bloco, pendentes = {}, etapaId, exigeLinguagemAmor
                       onClick={() => alternarHabilidade(h)}
                       style={{
                         fontSize: 11.5, padding: "3px 8px", borderRadius: 999, cursor: "pointer",
-                        border: `1px solid ${on ? C.gold : C.border}`, background: on ? "#F4E7CE" : "#fff",
-                        color: on ? C.goldDeep : C.inkSoft, fontWeight: on ? 600 : 400,
+                        border: `1px solid ${on ? C.primary : C.border}`, background: on ? "#E6F0E9" : "#fff",
+                        color: on ? C.primaryDeep : C.inkSoft, fontWeight: on ? 600 : 400,
                       }}
                     >
                       {INTELIGENCIAS[h]}
@@ -222,7 +222,7 @@ function IndicadorSalvamento({ estado, salvoEm }: { estado: EstadoSalvamento; sa
     case "salvando":
       return <span style={{ ...base, color: C.inkSoft }} role="status"><Loader2 size={14} className="tv-girar" /> Salvando…</span>;
     case "pendente":
-      return <span style={{ ...base, color: C.goldDeep }} role="status">Guardado neste navegador — enviando…</span>;
+      return <span style={{ ...base, color: C.primaryDeep }} role="status">Guardado neste navegador — enviando…</span>;
     case "offline":
       return <span style={{ ...base, color: C.red }} role="status"><CloudOff size={14} /> Sem conexão — guardado neste navegador, será enviado quando a conexão voltar</span>;
     case "erro":
@@ -255,7 +255,7 @@ export function BlocoLeitura({ bloco, etapaId, exigeLinguagemAmor }: { bloco: Bl
             <AnexosBloco blocoId={bloco.id} etapaId={etapaId} disciplinaId={bloco.disciplina_id} editavel={false} />
           )}
           {c.chave === "objetivos" && bloco.habilidades.length > 0 && (
-            <p style={{ fontSize: 12, color: C.goldDeep, margin: "4px 0 0" }}>{bloco.habilidades.map((h) => INTELIGENCIAS[h]).join(" · ")}</p>
+            <p style={{ fontSize: 12, color: C.primaryDeep, margin: "4px 0 0" }}>{bloco.habilidades.map((h) => INTELIGENCIAS[h]).join(" · ")}</p>
           )}
         </div>
       ))}

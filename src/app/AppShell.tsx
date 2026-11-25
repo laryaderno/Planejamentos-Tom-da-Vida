@@ -36,12 +36,12 @@ function Moldura() {
       <aside
         className="tv-sidebar"
         style={{
-          width: 236, background: C.sidebar, padding: "22px 14px", display: "flex",
-          flexDirection: "column", flexShrink: 0,
+          width: 232, background: C.sidebar, padding: "18px 12px", display: "flex",
+          flexDirection: "column", flexShrink: 0, borderRight: `1px solid ${C.border}`,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 12px 22px" }}>
-          <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#fff", padding: 2, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 8px 20px" }}>
+          <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#fff", border: `1px solid ${C.border}`, padding: 2, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
             <img
               src={LOGO_URL}
               alt="Logo Escola Tom da Vida"
@@ -49,12 +49,12 @@ function Moldura() {
             />
           </div>
           <div style={{ minWidth: 0 }}>
-            <p className="tv-serif" style={{ color: "#fff", fontSize: 15, fontWeight: 600, margin: 0, whiteSpace: "nowrap" }}>Tom da Vida</p>
+            <p className="tv-serif" style={{ color: C.ink, fontSize: 15, fontWeight: 700, margin: 0, whiteSpace: "nowrap" }}>Tom da Vida</p>
             <p style={{ color: C.sideTextMuted, fontSize: 11.5, margin: 0 }}>Sistema de planejamento</p>
           </div>
         </div>
 
-        <nav className="tv-sidebar-nav" style={{ display: "flex", flexDirection: "column", gap: 2, paddingLeft: 14 }}>
+        <nav className="tv-sidebar-nav" style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {itens.map((item) => {
             const Icon = item.icone;
             return (
@@ -82,31 +82,35 @@ function Moldura() {
           </NavLink>
         </nav>
 
-        <div className="tv-sidebar-footer" style={{ marginTop: "auto", paddingTop: 18, borderTop: `1px solid ${C.sidebarSoft}` }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 8px" }}>
-            <div style={{ width: 30, height: 30, borderRadius: "50%", background: C.gold, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
-              {usuario.nome[0] ?? "?"}
-            </div>
-            <Link to="/perfil" title="Meu perfil" style={{ minWidth: 0, flex: 1, textDecoration: "none" }}>
-              <p style={{ color: "#fff", fontSize: 13, fontWeight: 600, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {usuario.nome}
-              </p>
-              <p style={{ color: C.sideTextMuted, fontSize: 11.5, margin: 0 }}>{ROTULO_PAPEL[usuario.papel]}</p>
-            </Link>
-            <button onClick={pedirSaida} aria-label="Sair" style={{ background: "none", border: "none", color: C.sideTextMuted, cursor: "pointer", padding: 4 }}>
-              <LogOut size={16} />
-            </button>
-          </div>
+        <div className="tv-sidebar-footer" style={{ marginTop: "auto", paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+          <button className="tv-nav-item" onClick={pedirSaida}>
+            <LogOut size={16} strokeWidth={2} style={{ flexShrink: 0 }} />
+            <span>Sair</span>
+          </button>
         </div>
       </aside>
 
 
-      <main className="tv-scroll" style={{ flex: 1, padding: "0 36px 30px", overflowY: "auto" }}>
-        <div style={{ margin: "0 -36px 30px" }}><BannerConexao /></div>
-        <h1 className="tv-serif" style={{ fontSize: 26, fontWeight: 600, color: C.ink, margin: "0 0 22px" }}>
-          {titulo}
-        </h1>
-        <Outlet />
+      <main className="tv-scroll" style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>
+        <BannerConexao />
+        <header
+          className="tv-topo"
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px 36px", background: "#fff", borderBottom: `1px solid ${C.border}` }}
+        >
+          <h1 className="tv-serif" style={{ fontSize: 19, fontWeight: 600, color: C.ink, margin: 0 }}>{titulo}</h1>
+          <Link to="/perfil" title="Meu perfil" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", minWidth: 0 }}>
+            <span style={{ textAlign: "right", minWidth: 0 }}>
+              <span style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: C.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{usuario.nome}</span>
+              <span style={{ display: "block", fontSize: 11.5, color: C.inkSoft }}>{ROTULO_PAPEL[usuario.papel]}</span>
+            </span>
+            <span style={{ width: 32, height: 32, borderRadius: "50%", background: C.primary, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+              {usuario.nome[0] ?? "?"}
+            </span>
+          </Link>
+        </header>
+        <div className="tv-conteudo" style={{ padding: "28px 36px 30px" }}>
+          <Outlet />
+        </div>
       </main>
       {modalSaida}
     </div>
