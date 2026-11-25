@@ -3,7 +3,9 @@ import {
   Archive,
   Bell,
   BookOpen,
+  CalendarCheck,
   CalendarDays,
+  Clock,
   GraduationCap,
   LayoutGrid,
   ScrollText,
@@ -19,6 +21,8 @@ export interface ItemNavegacao {
   icone: LucideIcon;
   /** Papéis que veem o item (matriz de permissões, §3). */
   papeis: Papel[];
+  /** Mostra o número de notificações não lidas. */
+  contador?: boolean;
 }
 
 const GESTAO: Papel[] = ["administrador", "diretor", "secretaria", "coordenador"];
@@ -26,10 +30,13 @@ const DIRECAO: Papel[] = ["administrador", "diretor", "secretaria"];
 
 export const NAVEGACAO: ItemNavegacao[] = [
   { caminho: "/visao-geral", rotulo: "Visão geral", icone: LayoutGrid, papeis: GESTAO },
+  { caminho: "/planejamentos", rotulo: "Planejamentos", icone: CalendarCheck, papeis: [...GESTAO, "professor"] },
+  { caminho: "/notificacoes", rotulo: "Notificações", icone: Bell, papeis: [...GESTAO, "professor"], contador: true },
+  { caminho: "/meus-horarios", rotulo: "Meus horários", icone: Clock, papeis: ["professor"] },
+  { caminho: "/grade", rotulo: "Grade horária", icone: Clock, papeis: GESTAO },
   { caminho: "/turmas", rotulo: "Turmas", icone: GraduationCap, papeis: GESTAO },
   { caminho: "/professores", rotulo: "Professores", icone: Users, papeis: GESTAO },
   { caminho: "/equipe", rotulo: "Equipe", icone: ShieldCheck, papeis: DIRECAO },
-  { caminho: "/solicitacoes", rotulo: "Solicitações", icone: Bell, papeis: GESTAO },
   { caminho: "/prazos", rotulo: "Prazos e ciclos", icone: CalendarDays, papeis: ["diretor", "secretaria"] },
   { caminho: "/conteudo", rotulo: "Conteúdo programático", icone: BookOpen, papeis: GESTAO },
   { caminho: "/banco", rotulo: "Banco de atividades", icone: Archive, papeis: [...GESTAO, "professor"] },

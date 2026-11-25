@@ -7,12 +7,16 @@ import { PerfilPage } from "@/features/auth/PerfilPage";
 import { RequerLogin } from "@/features/auth/RequerLogin";
 import { EsqueciSenhaPage, RedefinirSenhaPage } from "@/features/auth/SenhaPages";
 import { BancoAtividadesPage } from "@/features/banco-atividades/BancoAtividadesPage";
+import { PlanejamentoDiaPage } from "@/features/planejamentos/PlanejamentoDiaPage";
+import { PlanejamentosPage } from "@/features/planejamentos/PlanejamentosPage";
 import { PrazosPage } from "@/features/prazos/PrazosPage";
 import { ConteudoPage } from "@/features/relatorios/ConteudoPage";
+import { GradeHorariaPage } from "@/features/grade/GradeHorariaPage";
+import { MeusHorariosPage } from "@/features/grade/MeusHorariosPage";
+import { NotificacoesPage } from "@/features/notificacoes/NotificacoesPage";
 import { TurmasPage } from "@/features/turmas/TurmasPage";
 import { EquipePage } from "@/features/usuarios/EquipePage";
 import { ProfessoresPage } from "@/features/usuarios/ProfessoresPage";
-import { SolicitacoesPage } from "@/features/usuarios/SolicitacoesPage";
 import { VisaoGeralPage } from "@/features/visao-geral/VisaoGeralPage";
 import { AppShell } from "./AppShell";
 import { Inicio } from "./Inicio";
@@ -31,10 +35,15 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Inicio /> },
           { path: "visao-geral", element: <VisaoGeralPage /> },
+          { path: "planejamentos", element: <PlanejamentosPage /> },
+          { path: "planejamentos/:turma/:data/:turno", element: <PlanejamentoDiaPage /> },
+          { path: "grade", element: <GradeHorariaPage /> },
+          { path: "meus-horarios", element: <MeusHorariosPage /> },
           { path: "turmas", element: <TurmasPage /> },
           { path: "professores", element: <ProfessoresPage /> },
           { path: "equipe", element: <EquipePage /> },
-          { path: "solicitacoes", element: <SolicitacoesPage /> },
+          { path: "notificacoes", element: <NotificacoesPage /> },
+          { path: "solicitacoes", element: <Navigate to="/notificacoes" replace /> },
           { path: "prazos", element: <PrazosPage /> },
           { path: "conteudo", element: <ConteudoPage /> },
           { path: "banco", element: <BancoAtividadesPage /> },

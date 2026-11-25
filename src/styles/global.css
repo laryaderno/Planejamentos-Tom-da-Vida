@@ -82,3 +82,6 @@ html, body { margin: 0; background: var(--tv-paper); }
   .tv-sidebar-footer { display: none !important; }
   .tv-nav-perfil { display: flex; order: -1; }
 }
+
+.tv-girar { animation: tvGirar 0.9s linear infinite; }
+@keyframes tvGirar { to { transform: rotate(360deg); } }

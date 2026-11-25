@@ -1,6 +1,8 @@
 import { LogOut, UserCircle } from "lucide-react";
 import { Link, Navigate, NavLink, Outlet, useLocation } from "react-router";
+import { BannerConexao } from "@/components/BannerConexao";
 import { useAuth, useUsuario } from "@/features/auth/AuthContext";
+import { useContadorNotificacoes } from "@/features/notificacoes/api";
 import { ROTULO_PAPEL } from "@/lib/papeis";
 import { C } from "@/styles/tokens";
 import { LOGO_URL } from "./marca";
@@ -11,6 +13,7 @@ export function AppShell() {
   const usuario = useUsuario();
   const { pathname } = useLocation();
   const titulo = NAVEGACAO.find((i) => pathname.startsWith(i.caminho))?.rotulo ?? "";
+  const contador = useContadorNotificacoes();
   const itens = itensDoPapel(usuario.papel).filter((i) => i.caminho !== "/perfil");
 
   // Rota fora do menu do papel: volta para o início.
@@ -55,6 +58,14 @@ export function AppShell() {
               >
                 <Icon size={16} strokeWidth={2} style={{ flexShrink: 0 }} />
                 <span style={{ whiteSpace: "nowrap" }}>{item.rotulo}</span>
+                {item.contador && contador > 0 && (
+                  <span
+                    aria-label={`${contador} não lidas`}
+                    style={{ marginLeft: "auto", minWidth: 18, height: 18, padding: "0 5px", borderRadius: 999, background: C.red, color: "#fff", fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                  >
+                    {contador > 99 ? "99+" : contador}
+                  </span>
+                )}
               </NavLink>
             );
           })}
@@ -83,7 +94,8 @@ export function AppShell() {
       </aside>
 
 
-      <main className="tv-scroll" style={{ flex: 1, padding: "30px 36px", overflowY: "auto" }}>
+      <main className="tv-scroll" style={{ flex: 1, padding: "0 36px 30px", overflowY: "auto" }}>
+        <div style={{ margin: "0 -36px 30px" }}><BannerConexao /></div>
         <h1 className="tv-serif" style={{ fontSize: 26, fontWeight: 600, color: C.ink, margin: "0 0 22px" }}>
           {titulo}
         </h1>

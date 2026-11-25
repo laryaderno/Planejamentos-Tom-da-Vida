@@ -5,7 +5,7 @@ import { useNavigate } from "react-router";
 import { useUsuario } from "@/features/auth/AuthContext";
 import { useEtapas, usePerfis, useTurmas } from "@/lib/consultas";
 import { podeAprovar } from "@/lib/papeis";
-import { totalAtividadesAprovadas } from "@/mocks/dados";
+import { useAtividades } from "@/features/atividades/api";
 import { C } from "@/styles/tokens";
 
 export function VisaoGeralPage() {
@@ -21,7 +21,7 @@ export function VisaoGeralPage() {
   }));
   const pendencias = perfis.filter((p) => p.status === "pendente" && podeAprovar(eu, p.papel, p.etapa_solicitada_id)).length;
   const professoresAtivos = perfis.filter((p) => p.status === "ativo" && p.papel === "professor").length;
-  const totalAtividades = totalAtividadesAprovadas();
+  const totalAtividades = (useAtividades().data ?? []).filter((a) => a.status === "aprovada").length;
 
   return (
     <div>
@@ -68,16 +68,16 @@ export function VisaoGeralPage() {
 
         <DashboardCard
           icon={Bell}
-          title="Solicitações"
+          title="Solicitações de cadastro"
           description={pendencias === 0 ? "Nenhum cadastro aguardando você" : "Cadastros aguardando sua aprovação"}
           badge={pendencias > 0 ? `${pendencias} ${pendencias === 1 ? "pendente" : "pendentes"}` : null}
-          onClick={() => navigate("/solicitacoes")}
+          onClick={() => navigate("/notificacoes")}
         />
 
         <DashboardCard
           icon={Archive}
           title="Banco de atividades"
-          description={`${totalAtividades} atividades aprovadas (exemplo)`}
+          description={`${totalAtividades} ${totalAtividades === 1 ? "atividade aprovada" : "atividades aprovadas"}`}
           onClick={() => navigate("/banco")}
         />
       </div>
