@@ -1,11 +1,12 @@
 import { Archive, ArrowLeft, CalendarOff, ChevronLeft, ChevronRight, Clock, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, Navigate, useParams } from "react-router";
 import { Aviso } from "@/components/Aviso";
 import { ConfirmarAcao } from "@/components/ConfirmarAcao";
 import { Carregando } from "@/components/TelaCarregando";
 import { useUsuario } from "@/features/auth/AuthContext";
+import { useSincronizacao } from "@/lib/offline/SincronizacaoContext";
 import { diaDaSemana, useHorariosTurma, vigenteEm, type Horario } from "@/features/grade/api";
 import { useDiasSemAula } from "@/features/prazos/DiasSemAula";
 import { formatarData, ROTULO_TURNO, useDisciplinas, useEtapas, useVinculos, type Turno } from "@/lib/consultas";
@@ -39,9 +40,16 @@ export function PlanejamentoDiaPage() {
   const [historico, setHistorico] = useState<Bloco | null>(null);
   const [removendo, setRemovendo] = useState<Bloco | null>(null);
 
+  const { pendencias } = useSincronizacao();
   const horarios = useHorariosTurma(turmaId);
   const diasSemAula = useDiasSemAula();
   const [criandoHorario, setCriandoHorario] = useState<number | null>(null);
+  // Se o servidor não responder em 4 s, abre com a cópia local.
+  const [esperouServidor, setEsperouServidor] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setEsperouServidor(true), 4000);
+    return () => clearTimeout(t);
+  }, []);
   const [erroHorario, setErroHorario] = useState<string | null>(null);
 
   const p = dia.data;
@@ -56,8 +64,11 @@ export function PlanejamentoDiaPage() {
   ]);
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return <Navigate to="/planejamentos" replace />;
-  if (dia.error) return <Aviso>{mensagemDeErro(dia.error)}</Aviso>;
-  if (!turmas || dia.isPending || horarios.isPending || diasSemAula.isPending || !etapas.data || !disciplinas.data) return <Carregando />;
+  if (dia.error && !dia.data) return <Aviso>{mensagemDeErro(dia.error)}</Aviso>;
+  // Com internet, espera a versão atual do servidor antes de montar o editor (a cópia
+  // local pode estar velha). Sem resposta do servidor, usa a cópia local.
+  const diaAtualizado = dia.isFetchedAfterMount || dia.isError || dia.fetchStatus === "paused" || !navigator.onLine || esperouServidor;
+  if (!turmas || pendencias === undefined || dia.isPending || !diaAtualizado || horarios.isPending || diasSemAula.isPending || !etapas.data || !disciplinas.data) return <Carregando />;
 
   const turma = turmas.find((t) => t.id === turmaId);
   if (!turma) return <Aviso>Você não tem acesso a esta turma.</Aviso>;
@@ -205,6 +216,7 @@ export function PlanejamentoDiaPage() {
             {meu ? (
               <BlocoEditor
                 bloco={b}
+                pendentes={pendencias.find((x) => x.blocoId === b.id)?.campos}
                 etapaId={turma.etapa_id}
                 exigeLinguagemAmor={exigeLinguagem}
                 onHistorico={() => setHistorico(b)}

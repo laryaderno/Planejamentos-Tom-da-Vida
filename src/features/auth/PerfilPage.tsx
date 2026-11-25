@@ -8,11 +8,13 @@ import { C } from "@/styles/tokens";
 import { descrever, resumoTurmas } from "@/features/usuarios/vinculos";
 import { useAuth, useUsuario } from "./AuthContext";
 import { CampoSenha } from "./TelaAuth";
+import { useSair } from "@/lib/offline/useSair";
 
 /** Minhas informações, troca de senha e saída da conta. */
 export function PerfilPage() {
   const eu = useUsuario();
-  const { sessao, sair, definirNovaSenha } = useAuth();
+  const { sessao, definirNovaSenha } = useAuth();
+  const { pedirSaida, modal: modalSaida } = useSair();
   const vinculos = useVinculos();
   const { catalogo } = useCatalogo();
 
@@ -52,10 +54,11 @@ export function PerfilPage() {
           <p style={{ fontSize: 14.5, fontWeight: 600, color: C.ink, margin: "0 0 3px" }}>Sair da conta</p>
           <p style={{ fontSize: 12.5, color: C.inkSoft, margin: 0 }}>Encerra a sessão neste navegador.</p>
         </div>
-        <button className="tv-btn tv-btn-secondary" onClick={sair}>
+        <button className="tv-btn tv-btn-secondary" onClick={pedirSaida}>
           <LogOut size={15} /> Sair
         </button>
       </section>
+      {modalSaida}
     </div>
   );
 }

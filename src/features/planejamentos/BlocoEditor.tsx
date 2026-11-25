@@ -20,6 +20,8 @@ import { useSalvamento, type EstadoSalvamento } from "./useSalvamento";
 
 interface Props {
   bloco: Bloco;
+  /** Alterações ainda guardadas no navegador (não enviadas): prevalecem sobre o servidor. */
+  pendentes?: Record<string, unknown>;
   etapaId: number;
   exigeLinguagemAmor: boolean;
   onHistorico: () => void;
@@ -30,16 +32,18 @@ interface Props {
 const rotulo: CSSProperties = { display: "block", fontSize: 12.5, fontWeight: 600, color: C.ink, marginBottom: 5 };
 
 /** Edição do bloco do próprio professor, com salvamento automático (§6, §7). */
-export function BlocoEditor({ bloco, etapaId, exigeLinguagemAmor, onHistorico, onRemover, aoSalvar }: Props) {
+export function BlocoEditor({ bloco, pendentes = {}, etapaId, exigeLinguagemAmor, onHistorico, onRemover, aoSalvar }: Props) {
   const s = useSalvamento(bloco, aoSalvar);
+  // Valores iniciais: o que está no servidor, com as alterações guardadas no navegador por cima.
+  const [inicial] = useState(() => ({ ...bloco, ...pendentes }) as Bloco);
   const [textos, setTextos] = useState<Record<CampoTexto, string>>(() =>
-    Object.fromEntries(CAMPOS_TEXTO.map((c) => [c.chave, bloco[c.chave]])) as Record<CampoTexto, string>,
+    Object.fromEntries(CAMPOS_TEXTO.map((c) => [c.chave, inicial[c.chave]])) as Record<CampoTexto, string>,
   );
-  const [inicio, setInicio] = useState(hora(bloco.hora_inicio));
-  const [fim, setFim] = useState(hora(bloco.hora_fim));
-  const [habilidades, setHabilidades] = useState<Inteligencia[]>(bloco.habilidades);
-  const [linguagens, setLinguagens] = useState<LinguagemAmor[]>(bloco.linguagens_amor);
-  const [status, setStatus] = useState<StatusBloco>(bloco.status);
+  const [inicio, setInicio] = useState(hora(inicial.hora_inicio));
+  const [fim, setFim] = useState(hora(inicial.hora_fim));
+  const [habilidades, setHabilidades] = useState<Inteligencia[]>(inicial.habilidades);
+  const [linguagens, setLinguagens] = useState<LinguagemAmor[]>(inicial.linguagens_amor);
+  const [status, setStatus] = useState<StatusBloco>(inicial.status);
 
   const vazio = Object.values(textos).every((t) => !t.trim()) && habilidades.length === 0 && status === "cinza";
   const verdeBloqueado = exigeLinguagemAmor && linguagens.length === 0;
@@ -218,9 +222,9 @@ function IndicadorSalvamento({ estado, salvoEm }: { estado: EstadoSalvamento; sa
     case "salvando":
       return <span style={{ ...base, color: C.inkSoft }} role="status"><Loader2 size={14} className="tv-girar" /> Salvando…</span>;
     case "pendente":
-      return <span style={{ ...base, color: C.goldDeep }} role="status">Alterações ainda não salvas</span>;
+      return <span style={{ ...base, color: C.goldDeep }} role="status">Guardado neste navegador — enviando…</span>;
     case "offline":
-      return <span style={{ ...base, color: C.red }} role="status"><CloudOff size={14} /> Sem conexão — vamos tentar de novo</span>;
+      return <span style={{ ...base, color: C.red }} role="status"><CloudOff size={14} /> Sem conexão — guardado neste navegador, será enviado quando a conexão voltar</span>;
     case "erro":
       return <span style={{ ...base, color: C.red }} role="status"><AlertTriangle size={14} /> Não salvo</span>;
     default:

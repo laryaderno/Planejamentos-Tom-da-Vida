@@ -311,26 +311,36 @@ alterar permissões) passam por **funções RPC no banco** ou **Edge Functions**
 
 ---
 
-## 5. Salvamento e modo offline (§7)
+## 5. Salvamento e modo offline (§7) — implementado na Fase 3
 
 ```
-digitação ──► estado do formulário ──(debounce 1,5 s)──► fila no IndexedDB ──► envio ao Supabase
-                                                               │                     │
-                                                               │            sucesso: remove da fila
-                                                               │            falha de rede: mantém
-                                                               ▼
-                                              evento "online" / a cada 30 s: reenvia a fila
+digitação ──► fila no navegador (IndexedDB) ──(1,5 s sem digitar)──► salvar_bloco no servidor
+                     │                                                     │
+                     │                                   confirmado: sai da fila só o que foi enviado
+                     │                                   sem conexão: fica na fila
+                     ▼                                   erro de regra: fica marcado (não reenvia sozinho)
+   envio automático: ao abrir o sistema, quando a conexão volta, ao voltar para a aba e a cada 30 s
 ```
 
-- Toda alteração entra **primeiro** no IndexedDB, então sobrevive a fechar a aba, travar o
-  navegador ou cair a internet.
-- Banner fixo quando `navigator.onLine = false` **ou** a fila tem itens com falha:
-  "Você está offline. As alterações podem não ter sido salvas."
-- Indicador sempre visível: *Salvando…* / *Salvo às 14:32* / *Pendente (offline)*.
-- Botão **Salvar** força o envio imediato da fila.
-- Conflito: cada envio leva a `versao` do bloco. Se o servidor tiver uma versão mais nova, a
-  alteração local é aplicada mesmo assim (*last write wins*), mas o usuário vê um aviso e a versão
-  sobrescrita fica no histórico.
+- **Fila** (`src/lib/offline/`): toda alteração vai **primeiro** para o IndexedDB, por usuário × bloco,
+  acumulando os campos. Sobrevive a fechar a aba, travar o navegador ou cair a internet. O que é digitado
+  durante um envio continua na fila. Nunca há dois envios do mesmo bloco ao mesmo tempo.
+- **Ao reabrir:** o editor mostra o que está no servidor com as alterações da fila por cima, e a fila é
+  enviada sozinha, mesmo que o professor não volte àquele planejamento.
+- **Avisos:** faixa fixa no topo — "Você está offline. As alterações podem não ter sido salvas." (ou "Sem
+  conexão com o servidor", quando os envios falham com o computador online), "Enviando N alterações
+  guardadas…" e, para erros de regra (ex.: bloco arquivado), "Ver o que foi digitado" / "Descartar".
+  Indicador por bloco: *Guardado neste navegador — enviando…*, *Sem conexão*, *Salvo às …*.
+- **Botão Salvar** força o envio imediato.
+- **Conflito:** cada envio leva a última versão confirmada; se o servidor tiver outra, a alteração é
+  gravada mesmo assim (*last write wins*), o usuário vê um aviso e a versão anterior fica no histórico.
+- **Abrir sem internet:** o app fica guardado no navegador (service worker, `vite-plugin-pwa`, só no
+  build de produção) e as consultas já feitas ficam numa cópia local (IndexedDB, 7 dias). Com internet,
+  a página do dia espera os dados atuais do servidor por até 4 s antes de usar a cópia local; consultas
+  desistem depois de 12 s sem resposta.
+- **Sair da conta:** se houver alterações não enviadas, o sistema avisa; elas continuam guardadas
+  (separadas por usuário) e são enviadas quando a pessoa entrar de novo **no mesmo navegador**. A cópia
+  local dos dados é apagada ao sair.
 
 ---
 
@@ -419,7 +429,7 @@ Turmas, Professores, Solicitações e Conteúdo viram componentes dentro de `fea
 | **0. Fundação** ✅ | TypeScript, rotas, Supabase local, migrações iniciais, extração do protótipo em componentes *(deploy de staging pendente)* | — |
 | **1. Acesso e hierarquia** ✅ | Cadastro, aprovação, papéis, vínculos, travas, modal de confirmação, log de auditoria, reset de senha | §2–5, §11 |
 | **2. Turmas e planejamentos** ✅ | Turmas, editor de planejamento com blocos, status, Linguagem do Amor, notas, histórico | §6, §6.2, §6.3 |
-| **3. Salvamento à prova de falhas** | Fila offline, banner, indicador de salvamento, conflito | §7 |
+| **3. Salvamento à prova de falhas** ✅ | Fila offline, banner, indicador de salvamento, conflito | §7 |
 | **4. Exportação e relatórios** | PDF/Word do planejamento, conteúdo programático, relatório de entregas | §6.1, §9 |
 | **5. Prazos e e-mails** | Configuração global, períodos, rotina diária, lembretes, etiqueta de atraso, alerta ao Coordenador | §8 |
 | **6. Universidade Corporativa** | Trilhas, aulas, upload de vídeo, desbloqueio sequencial, obrigatoriedades, painel de auditoria | §10 |

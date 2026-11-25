@@ -1,129 +1,96 @@
 import { useEffect, useRef, useState } from "react";
-import { mensagemDeErro, verificar } from "@/lib/erros";
-import { supabase } from "@/lib/supabase";
+import { useUsuario } from "@/features/auth/AuthContext";
+import { chavePendencia } from "@/lib/offline/banco-local";
+import { lerPendencia, registrarAlteracao } from "@/lib/offline/fila";
+import { useSincronizacao } from "@/lib/offline/SincronizacaoContext";
 import type { Bloco } from "./api";
 
 export type EstadoSalvamento = "salvo" | "pendente" | "salvando" | "erro" | "offline";
 
-interface RespostaSalvar {
-  versao: number;
-  atualizado_em: string;
-  conflito: boolean;
-}
-
 const ESPERA_MS = 1500;
-const NOVA_TENTATIVA_MS = 10_000;
-
-function erroDeRede(e: unknown): boolean {
-  if (!navigator.onLine) return true;
-  const msg = e && typeof e === "object" && "message" in e ? String(e.message) : "";
-  return /Failed to fetch|NetworkError|Load failed/i.test(msg);
-}
 
 /**
- * Salvamento do bloco (§7): grava sozinho 1,5 s depois da última alteração,
- * envia só os campos alterados e tenta de novo quando a conexão volta.
- * Na Fase 3 a fila também passa a sobreviver ao fechamento da aba (IndexedDB).
+ * Salvamento do bloco (§7). Cada alteração vai primeiro para a fila no
+ * navegador (IndexedDB) e é enviada 1,5 s depois da última digitação.
+ * Se a internet cair ou a aba fechar, a fila é enviada depois — nada se perde.
  */
 export function useSalvamento(bloco: Bloco, aoSalvar?: () => void) {
-  const [estado, setEstado] = useState<EstadoSalvamento>("salvo");
-  const [erro, setErro] = useState<string | null>(null);
+  const eu = useUsuario();
+  const { sincronizador, pendencias, online } = useSincronizacao();
+  const chave = chavePendencia(eu.id, bloco.id);
+  const pendencia = pendencias?.find((p) => p.chave === chave);
+
+  const [salvando, setSalvando] = useState(false);
+  const [semConexao, setSemConexao] = useState(false);
   const [salvoEm, setSalvoEm] = useState<string>(bloco.atualizado_em);
   const [conflito, setConflito] = useState(false);
-
-  // Tudo o que as funções assíncronas precisam fica em refs (não depende de re-render).
-  const r = useRef({
-    id: bloco.id,
-    versao: bloco.versao,
-    pendentes: {} as Record<string, unknown>,
-    salvando: false,
-    timer: undefined as ReturnType<typeof setTimeout> | undefined,
-    aoSalvar,
-  });
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const ultimaGravacao = useRef<Promise<void>>(Promise.resolve());
+  // Última versão confirmada pelo servidor (a do carregamento pode ficar velha depois de um envio).
+  const versao = useRef(bloco.versao);
+  const aoSalvarRef = useRef(aoSalvar);
   useEffect(() => {
-    r.current.aoSalvar = aoSalvar;
+    aoSalvarRef.current = aoSalvar;
   }, [aoSalvar]);
 
-  const [acoes] = useState(() => {
-    const estadoAtual = r.current;
-
-    function agendar(ms: number) {
-      clearTimeout(estadoAtual.timer);
-      estadoAtual.timer = setTimeout(() => void salvarAgora(), ms);
-    }
-
-    async function salvarAgora(): Promise<void> {
-      clearTimeout(estadoAtual.timer);
-      if (estadoAtual.salvando) return agendar(300);
-      const campos = estadoAtual.pendentes;
-      if (Object.keys(campos).length === 0) return;
-      estadoAtual.pendentes = {};
-      estadoAtual.salvando = true;
-      setEstado("salvando");
-      try {
-        const resp = verificar(
-          await supabase.rpc("salvar_bloco", { p_id: estadoAtual.id, p_versao: estadoAtual.versao, p_campos: campos as never }),
-        ) as unknown as RespostaSalvar;
-        estadoAtual.versao = resp.versao;
-        setSalvoEm(resp.atualizado_em);
-        if (resp.conflito) setConflito(true);
-        setErro(null);
-        const restante = Object.keys(estadoAtual.pendentes).length > 0;
-        setEstado(restante ? "pendente" : "salvo");
-        if (restante) agendar(ESPERA_MS); // algo foi digitado enquanto salvava
-        estadoAtual.aoSalvar?.();
-      } catch (e) {
-        // Devolve os campos à fila sem sobrescrever o que foi digitado depois.
-        estadoAtual.pendentes = { ...campos, ...estadoAtual.pendentes };
-        if (erroDeRede(e)) {
-          setEstado("offline");
-          setErro(null);
-          agendar(NOVA_TENTATIVA_MS);
-        } else {
-          setEstado("erro");
-          setErro(mensagemDeErro(e));
+  // Resultado de qualquer envio deste bloco (daqui ou do envio automático global).
+  useEffect(
+    () =>
+      sincronizador.aoSincronizar((blocoId, r) => {
+        if (blocoId !== bloco.id) return;
+        setSemConexao(r.tipo === "sem-conexao");
+        if (r.tipo === "enviado") {
+          versao.current = r.resposta.versao;
+          setSalvoEm(r.resposta.atualizado_em);
+          if (r.resposta.conflito) setConflito(true);
+          aoSalvarRef.current?.();
         }
-      } finally {
-        estadoAtual.salvando = false;
+      }),
+    [sincronizador, bloco.id],
+  );
+
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  async function salvarAgora() {
+    clearTimeout(timer.current);
+    setSalvando(true);
+    try {
+      await ultimaGravacao.current; // garante que a última tecla já está na fila
+      const r = await sincronizador.sincronizar(chave, bloco.id);
+      // Algo foi digitado durante o envio: manda de novo em seguida.
+      const resto = await lerPendencia(eu.id, bloco.id);
+      if (r.tipo === "enviado" && resto && !resto.erro) {
+        timer.current = setTimeout(() => void salvarAgora(), ESPERA_MS);
       }
+    } finally {
+      setSalvando(false);
     }
+  }
 
-    /** Registra uma alteração e agenda o salvamento automático. */
-    function alterar(campo: string, valor: unknown) {
-      estadoAtual.pendentes = { ...estadoAtual.pendentes, [campo]: valor };
-      setEstado((s) => (s === "offline" ? s : "pendente"));
-      agendar(ESPERA_MS);
-    }
+  /** Registra uma alteração (já fica guardada no navegador) e agenda o envio. */
+  function alterar(campo: string, valor: unknown) {
+    ultimaGravacao.current = registrarAlteracao(eu.id, bloco.id, versao.current, { [campo]: valor });
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => void salvarAgora(), ESPERA_MS);
+  }
 
-    function temPendencia() {
-      return Object.keys(estadoAtual.pendentes).length > 0 || estadoAtual.salvando;
-    }
-
-    return { salvarAgora, alterar, temPendencia };
-  });
-
-  useEffect(() => {
-    // Conexão voltou: envia o que ficou pendente.
-    const aoVoltar = () => void acoes.salvarAgora();
-    // Aviso ao fechar a aba com alterações não enviadas.
-    const aoSair = (e: BeforeUnloadEvent) => {
-      if (acoes.temPendencia()) e.preventDefault();
-    };
-    window.addEventListener("online", aoVoltar);
-    window.addEventListener("beforeunload", aoSair);
-    return () => {
-      window.removeEventListener("online", aoVoltar);
-      window.removeEventListener("beforeunload", aoSair);
-      // Ao sair da tela, envia o que restou.
-      if (acoes.temPendencia()) void acoes.salvarAgora();
-    };
-  }, [acoes]);
+  const estado: EstadoSalvamento = !pendencia
+    ? salvando
+      ? "salvando"
+      : "salvo"
+    : pendencia.erro
+      ? "erro"
+      : salvando
+        ? "salvando"
+        : !online || semConexao
+          ? "offline"
+          : "pendente";
 
   return {
-    alterar: acoes.alterar,
-    salvarAgora: acoes.salvarAgora,
+    alterar,
+    salvarAgora: () => salvarAgora(),
     estado,
-    erro,
+    erro: pendencia?.erro ?? null,
     salvoEm,
     conflito,
     fecharConflito: () => setConflito(false),
