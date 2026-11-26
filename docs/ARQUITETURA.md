@@ -155,18 +155,17 @@ confirmação, o destino dos planejamentos dele:
 
 | Opção | O que acontece |
 |---|---|
-| **Manter** (padrão) | Os blocos do professor ficam arquivados (`blocos.arquivado_em`, somente leitura) e passam a aparecer no **Banco de Atividades → seção Planejamentos** da turma. Continuam contando no conteúdo programático e no relatório de entregas. |
-| **Excluir** | Os blocos **não são apagados do banco**: recebem `blocos.excluido_em` e deixam de aparecer nas telas de planejamento e no Banco de Atividades. **Continuam contando no conteúdo programático e no relatório de entregas**, que leem todos os blocos, inclusive os excluídos. |
+| **Manter** (padrão) | Os blocos do professor ficam arquivados (`blocos.arquivado_em`, somente leitura) e passam a aparecer no **Banco de Atividades → seção Planejamentos** da turma. Continuam contando no relatório de entregas. |
+| **Excluir** | Os blocos **não são apagados do banco**: recebem `blocos.excluido_em` e deixam de aparecer nas telas de planejamento e no Banco de Atividades. **Continuam contando no relatório de entregas**, que lê todos os blocos, inclusive os excluídos. |
 
 Em nenhuma das opções um planejamento é apagado de verdade: o registro pedagógico da escola
-(conteúdo programático e entregas) fica sempre completo. A diferença entre as opções é só onde o
+(entregas) fica sempre completo. A diferença entre as opções é só onde o
 planejamento continua visível.
 
 | Onde aparece | Ativo | Manter | Excluir |
 |---|---|---|---|
 | Telas de planejamento da turma | ✔ | ✔ (somente leitura) | — |
 | Banco de Atividades → Planejamentos | — | ✔ | — |
-| Conteúdo programático | ✔ | ✔ | ✔ |
 | Relatório de entregas | ✔ | ✔ | ✔ |
 
 Tudo acontece numa única função RPC `remover_professor(usuario_id, destino)` com
@@ -225,6 +224,29 @@ horários*; no dia, os horários previstos ainda sem bloco aparecem com o botão
 e em cada bloco do dia. Aparece quando a entrega saiu com atraso ou quando o prazo venceu sem entrega. É só uma
 leitura de `entregas` + `periodos_entrega` (`src/features/planejamentos/atraso.tsx`); todos que veem a turma veem
 as entregas dela (política de leitura de `entregas`: o próprio professor ou `pode_ver_turma`).
+
+### 3.3.2 Horários de PL e períodos personalizados
+
+**Horários de PL:** em *Grade horária > Horários de PL*, Coordenação (professores das suas etapas), Secretaria e
+Direção cadastram os horários de planejamento de cada professor (`horarios_pl`, `salvar_horarios_pl`). Cada entrega
+guarda `entregas.fora_do_pl` (trigger `marcar_fora_do_pl`, no fuso da escola): a etiqueta roxa **Fora do PL** aparece
+no resumo do período, nas notificações de entrega e na contagem de Prazos — independente de estar no prazo. Professor
+sem PL cadastrado não recebe a etiqueta (`null`). O professor vê os seus em *Meus horários*.
+
+**Período personalizado:** além de "Todas as etapas" ou uma etapa, o período pode valer só para turmas escolhidas
+(`periodo_turmas`, com busca por nome na tela). `periodo_vale_para_turma` concentra a regra (personalizado → só as
+turmas escolhidas; senão, a etapa ou todas) e é usada na entrega, nos e-mails e no relatório; no front,
+`periodoValeParaTurma`. Uma turma não pode ter dois períodos cobrindo a mesma data.
+
+### 3.3.3 Cronograma de Avaliação (substitui o Conteúdo programático)
+
+No início do ano, Secretaria, Coordenação (na sua etapa) e Direção **agendam** as avaliações de cada turma
+(`avaliacoes`, `agendar_avaliacao`): disciplina, tipo (mensal ou bimestral), bimestre e data — uma por disciplina,
+tipo e bimestre. O professor da disciplina naquela turma usa **Cadastrar avaliação** (`cadastrar_avaliacao`):
+conteúdo (obrigatório), material de apoio (links) e orientações, que viram anexos numerados no documento. A tela
+*Cronograma de Avaliação* mostra DATA | DISCIPLINA | CONTEÚDO por turma, tipo e bimestre e exporta em PDF/Word no
+formato do modelo da escola (`montarCronograma`). `professores_da_turma` dá o nome do(a) regente no cabeçalho e
+"Prof(a) …" dos especialistas. O antigo Conteúdo programático (`conteudo_programatico`) foi removido.
 
 ### 3.2.1 Aprovação do planejamento e avisos de nota
 
@@ -390,7 +412,7 @@ Avaliação · Recursos — e, só na Educação Infantil, uma 8ª coluna **Ling
 | Documento | Conteúdo | Quem | Formatos |
 |---|---|---|---|
 | Planejamento do período | Blocos de todos os professores da turma + momentos de rotina da grade (Lanche, Saída…) + aulas da grade ainda sem planejamento ("-") + dias sem aula; período = semana, período de entrega ou datas escolhidas | quem vê a turma | PDF, Word |
-| Conteúdo programático | Conteúdo e Objetivos por disciplina, mensal, bimestral (mês escolhido + seguinte) ou datas; **inclui planejamentos "excluídos"** na remoção de professor | Gestão (turmas do escopo) | PDF, Word |
+| Cronograma de Avaliação | DATA, DISCIPLINA e CONTEÚDO das avaliações da turma (mensal ou bimestral), com anexos de orientações; no formato do modelo da escola (substituiu o Conteúdo programático) | Gestão e professores (turmas do escopo) | PDF, Word |
 | Relatório de entregas | Por professor, em ordem alfabética: com antecedência, no prazo, com atraso e não entregues (prazo vencido sem entrega), para os prazos de um intervalo | Coordenação (etapa), Secretaria, Direção, Admin | PDF |
 
 - Os dados vêm das tabelas (respeitando a RLS) e de duas funções do servidor, `conteudo_programatico`
@@ -437,7 +459,7 @@ planejamento-aulas/
 │  │  ├─ turmas/
 │  │  ├─ planejamentos/        # editor, blocos, histórico, notas
 │  │  ├─ prazos/
-│  │  ├─ relatorios/           # conteúdo programático, entregas, exportação
+│  │  ├─ cronograma/           # Cronograma de Avaliação
 │  │  ├─ universidade/         # trilhas, player, painel de auditoria
 │  │  └─ admin/                # log de auditoria, reset de senha
 │  ├─ components/              # ConfirmarAcao, EmptyState, Badge de status, BannerOffline

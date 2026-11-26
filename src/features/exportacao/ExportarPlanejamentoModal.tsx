@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Modal } from "@/components/Modal";
-import { usePeriodos } from "@/features/notificacoes/api";
+import { periodoValeParaTurma, usePeriodos } from "@/features/notificacoes/api";
 import { dataCurta, somarDias } from "@/features/planejamentos/dominio";
 import type { Turma } from "@/lib/consultas";
 import { C } from "@/styles/tokens";
@@ -13,7 +13,7 @@ export function ExportarPlanejamentoModal({ turma, semana, onFechar }: { turma: 
   const periodos = usePeriodos();
   const fimSemana = somarDias(semana, 4);
   const periodo = periodos.data?.find(
-    (p) => p.inicio <= fimSemana && p.fim >= semana && (p.etapa_id === null || p.etapa_id === turma.etapa_id),
+    (p) => p.inicio <= fimSemana && p.fim >= semana && periodoValeParaTurma(p, turma),
   );
 
   const opcoes = [

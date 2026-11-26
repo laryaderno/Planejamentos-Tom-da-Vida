@@ -1,4 +1,4 @@
-import { CalendarDays, Lock, Pencil, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, Lock, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Aviso } from "@/components/Aviso";
 import { ConfirmarAcao } from "@/components/ConfirmarAcao";
@@ -8,7 +8,7 @@ import { Carregando } from "@/components/TelaCarregando";
 import { useUsuario } from "@/features/auth/AuthContext";
 import { useEntregas, usePeriodos, SITUACAO, type Periodo, type SituacaoEntrega } from "@/features/notificacoes/api";
 import { dataCurta, hojeISO, inicioDaSemana, somarDias } from "@/features/planejamentos/dominio";
-import { formatarData, useEtapas, usePerfis, useRecarregar } from "@/lib/consultas";
+import { formatarData, useEtapas, usePerfis, useRecarregar, useTurmas } from "@/lib/consultas";
 import { mensagemDeErro, verificar } from "@/lib/erros";
 import { podeAlterarConfiguracao } from "@/lib/papeis";
 import { supabase } from "@/lib/supabase";
@@ -23,6 +23,8 @@ interface Form {
   prazo: string;
   /** null = todas as etapas */
   etapa: number | null;
+  /** Personalizado: as turmas escolhidas (null = por etapa). */
+  turmas: number[] | null;
 }
 
 function diasEntre(a: string, b: string): number {
@@ -36,6 +38,7 @@ export function PrazosPage() {
   const entregas = useEntregas();
   const perfis = usePerfis();
   const etapas = useEtapas();
+  const turmas = useTurmas();
   const recarregar = useRecarregar();
   const [filtro, setFiltro] = useState<number | "todas">("todas");
   const [form, setForm] = useState<Form | null>(null);
@@ -51,19 +54,28 @@ export function PrazosPage() {
     return (Object.keys(SITUACAO) as SituacaoEntrega[]).map((s) => ({ s, n: doPeriodo.filter((e) => e.situacao === s).length }));
   };
 
+  const foraDoPL = (id: number) => (entregas.data ?? []).filter((e) => e.periodo_id === id && e.fora_do_pl).length;
   const nomeEtapa = (id: number | null) => (id === null ? "Todas as etapas" : etapas.data?.find((e) => e.id === id)?.nome ?? "");
-  const lista = periodos.data.filter((p) => filtro === "todas" || p.etapa_id === filtro || p.etapa_id === null);
+  const nomeTurma = (id: number) => turmas.data?.find((t) => t.id === id)?.nome ?? "turma";
+  const etapaDaTurma = (id: number) => turmas.data?.find((t) => t.id === id)?.etapa_id;
+  const abrangencia = (p: Periodo) =>
+    p.turmas.length > 0 ? `Personalizado: ${p.turmas.map(nomeTurma).sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true })).join(", ")}` : nomeEtapa(p.etapa_id);
+  const lista = periodos.data.filter(
+    (p) =>
+      filtro === "todas" ||
+      (p.turmas.length > 0 ? p.turmas.some((t) => etapaDaTurma(t) === filtro) : p.etapa_id === filtro || p.etapa_id === null),
+  );
 
   function novo() {
     // Sugestão: o período seguinte ao último desta etapa, com a mesma duração e a mesma antecedência do prazo.
     const etapa = filtro === "todas" ? null : filtro;
-    const ultimo = periodos.data?.find((p) => p.etapa_id === etapa);
+    const ultimo = periodos.data?.find((p) => p.etapa_id === etapa && p.turmas.length === 0);
     if (ultimo) {
       const inicio = inicioDaSemana(somarDias(ultimo.fim, 3));
-      setForm({ id: null, inicio, fim: somarDias(inicio, diasEntre(ultimo.inicio, ultimo.fim)), prazo: somarDias(inicio, diasEntre(ultimo.inicio, ultimo.prazo)), etapa });
+      setForm({ id: null, inicio, fim: somarDias(inicio, diasEntre(ultimo.inicio, ultimo.fim)), prazo: somarDias(inicio, diasEntre(ultimo.inicio, ultimo.prazo)), etapa, turmas: null });
     } else {
       const inicio = inicioDaSemana(somarDias(hoje, 7));
-      setForm({ id: null, inicio, fim: somarDias(inicio, 4), prazo: somarDias(inicio, -3), etapa });
+      setForm({ id: null, inicio, fim: somarDias(inicio, 4), prazo: somarDias(inicio, -3), etapa, turmas: null });
     }
   }
 
@@ -71,7 +83,7 @@ export function PrazosPage() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 18 }}>
         <p style={{ fontSize: 13.5, color: C.inkSoft, margin: 0, maxWidth: 620, lineHeight: 1.6 }}>
-          Cadastre os períodos de planejamento de cada etapa e a data-limite de entrega. O período conta como entregue quando o
+          Cadastre os períodos de planejamento de cada etapa (ou de turmas escolhidas, no modo personalizado) e a data-limite de entrega. O período conta como entregue quando o
           professor conclui todos os dias dele. Entregas com 2 ou mais dias úteis de folga contam como{" "}
           <strong>com antecedência</strong>; no dia ou na véspera, <strong>no prazo</strong>; depois, <strong>com atraso</strong>.
         </p>
@@ -93,7 +105,7 @@ export function PrazosPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
             <thead>
               <tr style={{ background: "#F9FAFB", textAlign: "left" }}>
-                {["Período", "Etapa", "Data-limite", "Entregas", ""].map((h) => (
+                {["Período", "Etapa ou turmas", "Data-limite", "Entregas", ""].map((h) => (
                   <th key={h} style={{ padding: "12px 16px", fontWeight: 600, color: C.inkSoft, fontSize: 12.5 }}>{h}</th>
                 ))}
               </tr>
@@ -110,13 +122,14 @@ export function PrazosPage() {
                       {dataCurta(p.inicio)} – {dataCurta(p.fim)}
                       {atual && <span style={{ textTransform: "none", color: C.primaryDeep, fontWeight: 600 }}> · atual</span>}
                     </td>
-                    <td style={{ padding: "12px 16px", color: C.inkSoft }}>{nomeEtapa(p.etapa_id)}</td>
+                    <td style={{ padding: "12px 16px", color: C.inkSoft, maxWidth: 260 }}>{abrangencia(p)}</td>
                     <td style={{ padding: "12px 16px", textTransform: "capitalize", color: p.prazo < hoje ? C.inkSoft : C.ink }}>{dataCurta(p.prazo)}</td>
                     <td style={{ padding: "12px 16px" }}>
                       <span style={{ display: "flex", gap: 10, flexWrap: "wrap", fontSize: 12.5 }}>
                         {qtd.map(({ s, n }) => (
                           <span key={s} style={{ color: SITUACAO[s].cor }}>{n} {SITUACAO[s].rotulo.toLowerCase()}</span>
                         ))}
+                        {foraDoPL(p.id) > 0 && <span style={{ color: "#6D28D9" }}>{foraDoPL(p.id)} fora do PL</span>}
                       </span>
                     </td>
                     <td style={{ padding: "12px 16px", textAlign: "right", whiteSpace: "nowrap" }}>
@@ -128,7 +141,7 @@ export function PrazosPage() {
                         <span style={{ fontSize: 12, color: C.inkSoft }}>Com entregas</span>
                       ) : (
                         <span style={{ display: "inline-flex", gap: 10 }}>
-                          <button className="tv-btn-text" style={{ display: "inline-flex", gap: 4, alignItems: "center", fontSize: 12.5 }} onClick={() => setForm({ id: p.id, inicio: p.inicio, fim: p.fim, prazo: p.prazo, etapa: p.etapa_id })}>
+                          <button className="tv-btn-text" style={{ display: "inline-flex", gap: 4, alignItems: "center", fontSize: 12.5 }} onClick={() => setForm({ id: p.id, inicio: p.inicio, fim: p.fim, prazo: p.prazo, etapa: p.etapa_id, turmas: p.turmas.length > 0 ? p.turmas : null })}>
                             <Pencil size={12} /> Editar
                           </button>
                           <button className="tv-btn-text-danger" style={{ display: "inline-flex", gap: 4, alignItems: "center", fontSize: 12.5 }} onClick={() => setRemovendo(p)}>
@@ -158,7 +171,12 @@ export function PrazosPage() {
           form={form}
           onCancelar={() => setForm(null)}
           onSalvar={async (f) => {
-            verificar(await supabase.rpc("salvar_periodo", { p_id: f.id as never, p_inicio: f.inicio, p_fim: f.fim, p_prazo: f.prazo, p_etapa: f.etapa as never }));
+            verificar(
+              await supabase.rpc("salvar_periodo", {
+                p_id: f.id as never, p_inicio: f.inicio, p_fim: f.fim, p_prazo: f.prazo,
+                p_etapa: (f.turmas ? null : f.etapa) as never, p_turmas: (f.turmas ?? null) as never,
+              }),
+            );
             await recarregar();
             setForm(null);
           }}
@@ -185,10 +203,16 @@ export function PrazosPage() {
 
 function PeriodoModal({ form: inicial, onCancelar, onSalvar }: { form: Form; onCancelar: () => void; onSalvar: (f: Form) => Promise<void> }) {
   const etapas = useEtapas();
+  const turmas = useTurmas();
   const [f, setF] = useState(inicial);
+  const [busca, setBusca] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
-  const valido = f.inicio && f.fim && f.prazo && f.fim >= f.inicio;
+  const valido = f.inicio && f.fim && f.prazo && f.fim >= f.inicio && (f.turmas === null || f.turmas.length > 0);
+  const escolhidas = new Set(f.turmas ?? []);
+  const termo = busca.trim().toLocaleLowerCase("pt-BR");
+  const alternar = (id: number) =>
+    setF((x) => ({ ...x, turmas: escolhidas.has(id) ? (x.turmas ?? []).filter((t) => t !== id) : [...(x.turmas ?? []), id] }));
 
   async function salvar() {
     setEnviando(true);
@@ -221,12 +245,67 @@ function PeriodoModal({ form: inicial, onCancelar, onSalvar }: { form: Form; onC
       }
     >
       <label style={{ display: "block", marginBottom: 14 }}>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>Etapa</span>
-        <select className="tv-input" style={{ marginTop: 6 }} value={f.etapa ?? ""} onChange={(e) => setF((x) => ({ ...x, etapa: e.target.value === "" ? null : Number(e.target.value) }))}>
+        <span style={{ fontSize: 13, fontWeight: 600 }}>Vale para</span>
+        <select
+          className="tv-input"
+          style={{ marginTop: 6 }}
+          value={f.turmas ? "personalizado" : (f.etapa ?? "")}
+          onChange={(e) => {
+            const v = e.target.value;
+            setF((x) => (v === "personalizado" ? { ...x, etapa: null, turmas: x.turmas ?? [] } : { ...x, etapa: v === "" ? null : Number(v), turmas: null }));
+          }}
+        >
           <option value="">Todas as etapas</option>
           {etapas.data?.map((e) => <option key={e.id} value={e.id}>{e.nome}</option>)}
+          <option value="personalizado">Personalizado (escolher as turmas)</option>
         </select>
       </label>
+      {f.turmas && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ position: "relative", marginBottom: 8 }}>
+            <Search size={14} color={C.inkSoft} style={{ position: "absolute", left: 10, top: 12 }} />
+            <input className="tv-input" style={{ paddingLeft: 30 }} placeholder="Pesquisar turma" value={busca} onChange={(e) => setBusca(e.target.value)} aria-label="Pesquisar turma" />
+          </div>
+          <div className="tv-scroll" style={{ maxHeight: 220, overflowY: "auto", border: `1px solid ${C.border}`, borderRadius: 8, padding: "6px 10px" }}>
+            {etapas.data?.map((e) => {
+              const daEtapa = (turmas.data ?? [])
+                .filter((t) => t.etapa_id === e.id && (!termo || t.nome.toLocaleLowerCase("pt-BR").includes(termo)))
+                .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { numeric: true }));
+              if (daEtapa.length === 0) return null;
+              const todas = daEtapa.every((t) => escolhidas.has(t.id));
+              return (
+                <div key={e.id} style={{ padding: "6px 0" }}>
+                  <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 12.5, fontWeight: 600, color: C.inkSoft }}>
+                    <input
+                      type="checkbox"
+                      checked={todas}
+                      onChange={() =>
+                        setF((x) => {
+                          const ids = daEtapa.map((t) => t.id);
+                          const resto = (x.turmas ?? []).filter((t) => !ids.includes(t));
+                          return { ...x, turmas: todas ? resto : [...resto, ...ids] };
+                        })
+                      }
+                    />
+                    {e.nome}
+                  </label>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 14px", padding: "4px 0 0 22px" }}>
+                    {daEtapa.map((t) => (
+                      <label key={t.id} style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 13 }}>
+                        <input type="checkbox" checked={escolhidas.has(t.id)} onChange={() => alternar(t.id)} />
+                        {t.nome}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p style={{ fontSize: 12, color: f.turmas.length ? C.inkSoft : C.red, margin: "6px 0 0" }}>
+            {f.turmas.length === 0 ? "Escolha pelo menos uma turma." : `${f.turmas.length} ${f.turmas.length === 1 ? "turma escolhida" : "turmas escolhidas"}.`}
+          </p>
+        </div>
+      )}
       {campo("Primeiro dia do período", "inicio")}
       {campo("Último dia do período", "fim")}
       {campo("Data-limite de entrega", "prazo")}

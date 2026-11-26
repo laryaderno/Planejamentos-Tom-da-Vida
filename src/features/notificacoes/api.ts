@@ -8,7 +8,14 @@ import { podeAprovar } from "@/lib/papeis";
 import { supabase } from "@/lib/supabase";
 
 export type Notificacao = Tables<"notificacoes">;
-export type Periodo = Tables<"periodos_entrega">;
+/** Período de entrega; `turmas` preenchido = personalizado (só essas turmas). */
+export type Periodo = Tables<"periodos_entrega"> & { turmas: number[] };
+
+/** O período vale para a turma? Personalizado: só as turmas escolhidas; senão, a etapa (ou todas). */
+export function periodoValeParaTurma(p: Periodo, turma: { id: number; etapa_id: number }): boolean {
+  const turmas = p.turmas ?? [];
+  return turmas.length > 0 ? turmas.includes(turma.id) : p.etapa_id === null || p.etapa_id === turma.etapa_id;
+}
 export type Entrega = Tables<"entregas">;
 export type SituacaoEntrega = Database["public"]["Enums"]["situacao_entrega"];
 
@@ -29,8 +36,13 @@ export function useNotificacoes() {
 
 export function usePeriodos() {
   return useQuery({
-    queryKey: ["periodos"],
-    queryFn: async () => verificar(await supabase.from("periodos_entrega").select("*").order("inicio", { ascending: false })),
+    queryKey: ["periodos-turmas"],
+    queryFn: async (): Promise<Periodo[]> => {
+      const linhas = verificar(
+        await supabase.from("periodos_entrega").select("*, periodo_turmas(turma_id)").order("inicio", { ascending: false }),
+      );
+      return linhas.map(({ periodo_turmas, ...p }) => ({ ...p, turmas: periodo_turmas.map((t) => t.turma_id) }));
+    },
   });
 }
 

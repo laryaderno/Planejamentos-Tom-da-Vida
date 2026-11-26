@@ -87,7 +87,7 @@ export async function gerarDocx(doc: Documento, logo: ArrayBuffer | null): Promi
             borders: semBordas,
             children: [
               paragrafo([{ texto: doc.titulo, negrito: true }], 26),
-              ...doc.informacoes.map((i) => paragrafo([{ texto: `${i.rotulo}: `, negrito: true }, { texto: i.valor }], 20)),
+              ...doc.informacoes.map((i) => paragrafo(i.rotulo ? [{ texto: `${i.rotulo}: `, negrito: true }, { texto: i.valor }] : [{ texto: i.valor, negrito: true }], 20)),
             ],
           }),
         ],

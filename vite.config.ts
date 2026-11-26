@@ -11,7 +11,7 @@ export default defineConfig({
     // Os dados vêm da cópia local das consultas (src/lib/offline/cache.ts); a API não é guardada aqui.
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.svg", "logo-tom-da-vida.png"],
+      includeAssets: ["favicon-32.png", "favicon-64.png", "apple-touch-icon.png", "logo-tom-da-vida.png"],
       manifest: {
         name: "Planejamento de Aulas — Escola Tom da Vida",
         short_name: "Tom da Vida",
@@ -20,7 +20,11 @@ export default defineConfig({
         display: "standalone",
         background_color: "#F5F5F5",
         theme_color: "#6B9C7A",
-        icons: [{ src: "favicon.svg", sizes: "any", type: "image/svg+xml" }],
+        icons: [
+          { src: "icone-192.png", sizes: "192x192", type: "image/png" },
+          { src: "icone-512.png", sizes: "512x512", type: "image/png" },
+          { src: "icone-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+        ],
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
