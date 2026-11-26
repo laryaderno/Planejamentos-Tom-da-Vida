@@ -22,6 +22,21 @@ export function AvaliacaoBloco({ bloco, nome, aoAvaliar }: { bloco: Bloco; nome:
   const [erro, setErro] = useState<string | null>(null);
   const avalia = AVALIADORES.includes(eu.papel) && !bloco.arquivado_em;
   const concluido = bloco.status === "verde";
+  const souAutor = bloco.professor_id === eu.id && !bloco.arquivado_em;
+
+  /** Professor: avisa quem pediu a revisão que ela foi feita. */
+  async function revisaoFeita() {
+    setEnviando(true);
+    setErro(null);
+    try {
+      verificar(await supabase.rpc("concluir_revisao", { p_id: bloco.id }));
+      aoAvaliar();
+    } catch (e) {
+      setErro(mensagemDeErro(e));
+    } finally {
+      setEnviando(false);
+    }
+  }
 
   async function avaliar(decisao: "aprovado" | "revisar") {
     setEnviando(true);
@@ -77,9 +92,20 @@ export function AvaliacaoBloco({ bloco, nome, aoAvaliar }: { bloco: Bloco; nome:
         )}
       </div>
       {bloco.aprovacao === "revisar" && bloco.aprovacao_obs && (
-        <p style={{ margin: "8px 0 0", padding: "9px 12px", borderRadius: 8, background: "#FFF7ED", border: "1px solid #FED7AA", fontSize: 13, color: "#7C2D12" }}>
-          {bloco.aprovacao_obs}
-        </p>
+        <div style={{ margin: "8px 0 0", padding: "9px 12px", borderRadius: 8, background: "#FFF7ED", border: "1px solid #FED7AA", fontSize: 13, color: "#7C2D12", display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <span style={{ flex: 1, minWidth: 180 }}>{bloco.aprovacao_obs}</span>
+          {souAutor && (
+            <button
+              className="tv-btn tv-btn-primary"
+              style={botao}
+              disabled={enviando}
+              title="Avisa quem pediu a revisão; o planejamento volta a aguardar aprovação."
+              onClick={() => void revisaoFeita()}
+            >
+              <CheckCircle2 size={14} /> {enviando ? "Avisando…" : "Revisão feita"}
+            </button>
+          )}
+        </div>
       )}
       {revisando && (
         <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
