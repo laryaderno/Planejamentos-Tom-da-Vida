@@ -84,7 +84,7 @@ export function VisaoGeralPage() {
           icon={Users}
           title="Professores"
           description={`${professoresAtivos} ${professoresAtivos === 1 ? "professor ativo" : "professores ativos"}`}
-          onClick={() => navigate("/professores")}
+          onClick={() => navigate("/equipe")}
         />
 
         <DashboardCard
