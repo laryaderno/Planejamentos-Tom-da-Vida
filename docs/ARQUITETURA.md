@@ -200,8 +200,9 @@ horarios          (id, turma_id, dia_semana 1–5, hora_inicio, hora_fim, discip
 - O período conta como **entregue** quando o professor conclui (verde) as aulas dele naquela turma:
   - **com grade horária:** em cada dia com aula do período, um bloco concluído de cada disciplina que a grade
     lhe atribui naquele dia da semana;
-  - **sem grade** (turma ainda sem grade ou professor fora dela): o Regente, todos os dias com aula; o
-    especialista, todos os blocos que criou no período (ao menos um).
+  - **sem grade** (turma ainda sem grade ou professor fora dela): todos os dias com aula do período, seja
+    Regente ou especialista. (Antes o especialista entregava ao concluir os blocos que já tinha criado, e a
+    entrega saía com a semana incompleta.) Por isso, para o especialista, vale cadastrar a grade da turma.
 - **Dias sem aula** (feriados, recessos, formações) não são exigidos e não contam como dias úteis. A Direção
   ou a Secretaria os cadastra em *Prazos e ciclos*, para a escola toda ou para uma etapa; há importação dos
   feriados nacionais do ano (inclui Carnaval, Sexta-feira Santa e Corpus Christi, calculados pela Páscoa).
@@ -510,7 +511,7 @@ da fase indicada.
 | # | Pergunta | Proposta | Fase |
 |---|---|---|---|
 | D1 | O status (cinza/amarelo/verde) é do planejamento inteiro ou de cada bloco? Com Regente e especialistas no mesmo dia, cada um precisa marcar o seu. | ✅ **Decidido:** status por bloco; o status do dia é derivado (verde só quando todos os blocos estão verdes) | 2 |
-| D2 | O que conta como "entregue" para o prazo? | ✅ **Decidido:** o período conta como entregue quando o professor conclui todos os dias dele na turma (Regente: todos os dias úteis; especialista: todos os blocos que criou). Ver §3.3 | 5 |
+| D2 | O que conta como "entregue" para o prazo? | ✅ **Decidido:** o período conta como entregue quando o professor conclui todos os dias dele na turma (com grade horária: cada aula prevista para ele no período; sem grade: todos os dias com aula do período, para Regente ou especialista). Ver §3.3 | 5 |
 | D3 | O protótipo tem **prazos por etapa/turma com dois modos**; a v2 diz que o prazo é **global**. Qual vale? | ✅ **Decidido:** global para a escola, com cada período (início, fim, data-limite) cadastrado pela Direção ou Secretaria | 5 |
 | D4 | O protótipo tem um **Banco de Atividades** (aprovação de atividades por tema) que não existe na v2. Continua no escopo? | ✅ **Decidido:** continua, com anexos aprovados pela coordenação e pastas disciplina → tema (ver §3.3.1) e a aba *Planejamentos arquivados* (D6) | 2 |
 | D5 | Turno pertence à turma (como no protótipo) ou ao planejamento (como na v2: Data + Turno)? | ✅ **Decidido:** ao planejamento, com turno padrão vindo da turma | 2 |
