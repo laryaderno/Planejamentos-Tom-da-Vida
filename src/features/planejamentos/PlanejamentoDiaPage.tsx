@@ -14,6 +14,7 @@ import { mensagemDeErro, verificar } from "@/lib/erros";
 import { supabase } from "@/lib/supabase";
 import { C } from "@/styles/tokens";
 import { useNomes, usePlanejamentoDia, type Bloco } from "./api";
+import { AvaliacaoBloco } from "./AvaliacaoBloco";
 import { BlocoEditor, BlocoLeitura } from "./BlocoEditor";
 import { dataPorExtenso, hora, somarDias, statusDoDia } from "./dominio";
 import { HistoricoModal } from "./HistoricoModal";
@@ -64,6 +65,7 @@ export function PlanejamentoDiaPage() {
   const nomes = useNomes([
     ...(p?.blocos.map((b) => b.professor_id) ?? []),
     ...(p?.notas.map((n) => n.autor_id) ?? []),
+    ...(p?.blocos.map((b) => b.aprovacao_por) ?? []),
     ...previstos.map((h) => h.professor_id),
   ]);
 
@@ -220,6 +222,7 @@ export function PlanejamentoDiaPage() {
                 )}
               </div>
             </div>
+            <AvaliacaoBloco bloco={b} nome={nome} aoAvaliar={() => { void dia.refetch(); atualizarSemana(); }} />
             {meu ? (
               <BlocoEditor
                 bloco={b}
@@ -228,7 +231,11 @@ export function PlanejamentoDiaPage() {
                 exigeLinguagemAmor={exigeLinguagem}
                 onHistorico={() => setHistorico(b)}
                 onRemover={() => setRemovendo(b)}
-                aoSalvar={atualizarSemana}
+                aoSalvar={() => {
+                  atualizarSemana();
+                  // Alterar um bloco já avaliado faz a avaliação voltar a "aguardando".
+                  if (b.aprovacao) void dia.refetch();
+                }}
               />
             ) : (
               <BlocoLeitura bloco={b} etapaId={turma.etapa_id} exigeLinguagemAmor={exigeLinguagem} />

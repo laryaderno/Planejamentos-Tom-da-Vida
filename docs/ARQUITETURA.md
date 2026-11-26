@@ -226,6 +226,17 @@ e em cada bloco do dia. Aparece quando a entrega saiu com atraso ou quando o pra
 leitura de `entregas` + `periodos_entrega` (`src/features/planejamentos/atraso.tsx`); todos que veem a turma veem
 as entregas dela (política de leitura de `entregas`: o próprio professor ou `pode_ver_turma`).
 
+### 3.2.1 Aprovação do planejamento e avisos de nota
+
+Coordenação (na sua etapa), Secretaria e Direção avaliam cada bloco do professor com **Aprovar** (só depois de
+concluído) ou **Revisar** (com o que precisa ser revisto) — `avaliar_bloco` grava `blocos.aprovacao`
+(`aprovado` | `revisar`), quem e quando. O professor recebe uma notificação nos dois casos. Se ele alterar o bloco
+depois, a avaliação volta a "aguardando aprovação" (trigger `reabrir_aprovacao`). A avaliação aparece no histórico
+do bloco.
+
+Nota deixada por outra pessoa no planejamento avisa os professores dele: "Há uma nova nota em Planejamento de
+[data]" (trigger `avisar_nova_nota`).
+
 ### 3.3.1 Banco de atividades
 
 ```sql
