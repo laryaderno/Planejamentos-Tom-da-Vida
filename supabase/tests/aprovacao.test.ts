@@ -67,9 +67,17 @@ describe("Aprovar e Revisar", () => {
     expect(n!.link).toBe(`/planejamentos/${JARDIM1}/2026-12-01/matutino`);
   });
 
-  it("quando o professor altera o bloco, volta a aguardar avaliação", async () => {
+  it("revisão feita: só depois de alterar, e avisa quem pediu", async () => {
+    await expect(valor(u.regente!, "public.concluir_revisao($1)", [BLOCO])).rejects.toThrow(/alterações pedidas/);
     await salvar({ avaliacao: "Observação da participação", linguagens_amor: ["tempo_qualidade"], status: "verde" });
+    expect((await bloco()).aprovacao).toBe("revisar"); // editar não apaga o pedido
+    await expect(valor(u.ingles!, "public.concluir_revisao($1)", [BLOCO])).rejects.toThrow(/professor responsável/);
+    await valor(u.regente!, "public.concluir_revisao($1)", [BLOCO]);
     expect((await bloco()).aprovacao).toBeNull();
+    const [n] = await notificacoes(u.coordEI!, "planejamento_revisado");
+    expect(n!.titulo).toBe("Planejamento de 01/12/2026 revisado");
+    expect(n!.mensagem).toBe("Jardim 1: Marina Alves fez a revisão que você pediu. O planejamento aguarda a sua avaliação.");
+    await expect(valor(u.regente!, "public.concluir_revisao($1)", [BLOCO])).rejects.toThrow(/Não há pedido/);
   });
 
   it("Aprovar avisa o professor", async () => {
@@ -80,8 +88,14 @@ describe("Aprovar e Revisar", () => {
     expect(n!.mensagem).toBe("Jardim 1: aprovado por Helena Duarte.");
   });
 
+  it("alterar um bloco aprovado volta a aguardar avaliação", async () => {
+    await salvar({ recursos: "Blocos de montar" });
+    expect((await bloco()).aprovacao).toBeNull();
+  });
+
   it("aparece no histórico do bloco", async () => {
-    expect(await b.contar("select * from public.historico_blocos where bloco_id = $1 and campo = 'aprovacao'", [BLOCO])).toBe(3);
+    // revisar → revisão feita → aprovado → alterado
+    expect(await b.contar("select * from public.historico_blocos where bloco_id = $1 and campo = 'aprovacao'", [BLOCO])).toBe(4);
   });
 
   it("professor e Coordenação de outra etapa não avaliam", async () => {

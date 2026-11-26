@@ -539,6 +539,9 @@ isOneToOne: false
 "avaliar_entregas_do_periodo":
 { Args: { "p_periodo": number }; Returns: undefined
                            },
+"concluir_revisao":
+{ Args: { "p_id": number }; Returns: undefined
+                           },
 "conteudo_programatico":
 { Args: { "p_fim": string,"p_inicio": string,"p_turma": number }; Returns: {
               "conteudo": string,"data": string,"disciplina": string,"habilidades": (Database["public"]['Enums']["inteligencia"])[],"hora_inicio": string,"objetivos": string,"professor": string,"turno": Database["public"]['Enums']["turno"]

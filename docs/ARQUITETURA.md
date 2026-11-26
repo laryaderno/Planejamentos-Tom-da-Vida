@@ -230,9 +230,10 @@ as entregas dela (política de leitura de `entregas`: o próprio professor ou `p
 
 Coordenação (na sua etapa), Secretaria e Direção avaliam cada bloco do professor com **Aprovar** (só depois de
 concluído) ou **Revisar** (com o que precisa ser revisto) — `avaliar_bloco` grava `blocos.aprovacao`
-(`aprovado` | `revisar`), quem e quando. O professor recebe uma notificação nos dois casos. Se ele alterar o bloco
-depois, a avaliação volta a "aguardando aprovação" (trigger `reabrir_aprovacao`). A avaliação aparece no histórico
-do bloco.
+(`aprovado` | `revisar`), quem e quando. O professor recebe uma notificação nos dois casos. Com um pedido de revisão
+em aberto, o professor corrige o bloco e clica em **Revisão feita** (`concluir_revisao`, só depois de alterar algo):
+o bloco volta a "aguardando aprovação" e quem pediu a revisão é notificado. Se um bloco **aprovado** for alterado,
+a avaliação volta a "aguardando aprovação" (trigger `reabrir_aprovacao`). A avaliação aparece no histórico do bloco.
 
 Nota deixada por outra pessoa no planejamento avisa os professores dele: "Há uma nova nota em Planejamento de
 [data]" (trigger `avisar_nova_nota`).

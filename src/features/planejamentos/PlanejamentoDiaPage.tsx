@@ -233,8 +233,8 @@ export function PlanejamentoDiaPage() {
                 onRemover={() => setRemovendo(b)}
                 aoSalvar={() => {
                   atualizarSemana();
-                  // Alterar um bloco já avaliado faz a avaliação voltar a "aguardando".
-                  if (b.aprovacao) void dia.refetch();
+                  // Alterar um bloco aprovado faz a avaliação voltar a "aguardando".
+                  if (b.aprovacao === "aprovado") void dia.refetch();
                 }}
               />
             ) : (
