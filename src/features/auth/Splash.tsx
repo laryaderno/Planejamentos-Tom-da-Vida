@@ -6,6 +6,16 @@ import "./splash.css";
 const VERSICULOS: { texto: string; referencia: string }[] = [
   { texto: "Confie ao SENHOR tudo que você faz, e seus planos serão bem-sucedidos.", referencia: "Provérbios 16:3 NVT" },
   { texto: "Em tudo que fizerem, trabalhem de bom ânimo, como se fosse para o Senhor, e não para os homens.", referencia: "Colossenses 3:23 NVT" },
+  {
+    texto:
+      "Por fim, irmãos, quero lhes dizer só mais uma coisa. Concentrem-se em tudo que é verdadeiro, tudo que é nobre, tudo que é correto, tudo que é puro, tudo que é amável e tudo que é admirável. Pensem no que é excelente e digno de louvor.",
+    referencia: "Filipenses 4:8 NVT",
+  },
+  {
+    texto:
+      "‘Porque eu sei os planos que tenho para vocês’, diz o SENHOR. ‘São planos de bem, e não de mal, para lhes dar o futuro pelo qual anseiam.’",
+    referencia: "Jeremias 29:11 NVT",
+  },
   { texto: "Com bons conselhos os planos são bem-sucedidos; não saia para a guerra sem boas orientações.", referencia: "Provérbios 20:18 NVT" },
 ];
 const TROCA_MS = 45_000;
@@ -91,7 +101,7 @@ export function Splash({ aoEntrar }: { aoEntrar: () => void }) {
         <img src={LOGO_URL} alt="Escola Tom da Vida" />
       </div>
       <div key={indice} className={`tv-splash-bloco ${trocando ? "trocando" : ""}`} aria-live="polite">
-        <p className="tv-splash-versiculo">
+        <p className={`tv-splash-versiculo ${atual.texto.length > 140 ? "longo" : ""}`}>
           <span aria-hidden="true">
             “
             {palavras.map((p, i) => (
