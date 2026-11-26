@@ -64,16 +64,20 @@ export function useHistorico(blocoId: number) {
   });
 }
 
-/** Nomes das pessoas que aparecem nos planejamentos (professores e autores de notas). */
+type LinhaNome = { id: string; nome: string };
+const paraMapa = (linhas: LinhaNome[]) => new Map(linhas.map((l) => [l.id, l.nome]));
+
+/**
+ * Nomes das pessoas que aparecem nos planejamentos (professores e autores de notas).
+ * O cache guarda a lista (o cache offline só sabe salvar JSON); o Map é montado na leitura.
+ */
 export function useNomes(ids: (string | null | undefined)[]) {
   const unicos = [...new Set(ids.filter((x): x is string => !!x))].sort();
   return useQuery({
-    queryKey: ["nomes", unicos],
+    queryKey: ["nomes-lista", unicos],
     enabled: unicos.length > 0,
     staleTime: 5 * 60_000,
-    queryFn: async () => {
-      const linhas = verificar(await supabase.rpc("nomes_usuarios", { p_ids: unicos }));
-      return new Map(linhas.map((l) => [l.id, l.nome]));
-    },
+    queryFn: async (): Promise<LinhaNome[]> => verificar(await supabase.rpc("nomes_usuarios", { p_ids: unicos })),
+    select: paraMapa,
   });
 }
