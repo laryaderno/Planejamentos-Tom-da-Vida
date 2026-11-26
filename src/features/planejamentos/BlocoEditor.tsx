@@ -48,15 +48,24 @@ export function BlocoEditor({ bloco, pendentes = {}, etapaId, exigeLinguagemAmor
   const vazio = Object.values(textos).every((t) => !t.trim()) && habilidades.length === 0 && status === "cinza";
   const verdeBloqueado = exigeLinguagemAmor && linguagens.length === 0;
 
+  /** Começou a preencher um bloco "Não iniciado": passa sozinho para "Em andamento". */
+  function comecou() {
+    if (status !== "cinza") return;
+    setStatus("amarelo");
+    s.alterar("status", "amarelo");
+  }
+
   function texto(campo: CampoTexto, v: string) {
     setTextos((t) => ({ ...t, [campo]: v }));
     s.alterar(campo, v);
+    if (v.trim()) comecou();
   }
 
   function alternarHabilidade(h: Inteligencia) {
     const nova = habilidades.includes(h) ? habilidades.filter((x) => x !== h) : [...habilidades, h];
     setHabilidades(nova);
     s.alterar("habilidades", nova);
+    if (nova.length > habilidades.length) comecou();
   }
 
   function horario(campo: "hora_inicio" | "hora_fim", v: string) {
@@ -131,6 +140,7 @@ export function BlocoEditor({ bloco, pendentes = {}, etapaId, exigeLinguagemAmor
                     const nova = linguagens.includes(l) ? linguagens.filter((x) => x !== l) : [...linguagens, l];
                     setLinguagens(nova);
                     s.alterar("linguagens_amor", nova);
+                    if (nova.length > linguagens.length) comecou();
                     // sem nenhuma linguagem, não pode continuar concluído
                     if (nova.length === 0 && status === "verde") {
                       setStatus("amarelo");
