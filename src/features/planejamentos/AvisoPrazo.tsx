@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle } from "lucide-react";
-import type { ReactNode } from "react";
+import { AlertCircle, Check } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { useUsuario } from "@/features/auth/AuthContext";
 import { periodoValeParaTurma, useEntregas, usePeriodos, type Entrega, type Periodo } from "@/features/notificacoes/api";
@@ -108,10 +108,31 @@ export function useEntregasUltimos30Dias() {
   });
 }
 
+/** Atrasos já vistos por este usuário: professor → quantos estavam pendentes ao marcar como visto. */
+function lerVistos(chave: string): Record<string, number> {
+  try {
+    return JSON.parse(localStorage.getItem(chave) ?? "{}") as Record<string, number>;
+  } catch {
+    return {};
+  }
+}
+
 export function AvisoAtrasosGestao() {
+  const eu = useUsuario();
   const atrasos = useEntregasUltimos30Dias();
+  const chave = `tv-atrasos-vistos:${eu.id}`;
+  const [vistos, setVistos] = useState(() => lerVistos(chave));
   const pendentes = (atrasos.data ?? []).filter((l) => l.nao_entregue > 0).sort((a, b) => b.nao_entregue - a.nao_entregue);
-  if (pendentes.length === 0) return null;
+  // Some depois de "Marcar como visto"; volta só se aparecer atraso novo.
+  const temNovo = pendentes.some((l) => l.nao_entregue > (vistos[l.professor_id] ?? 0));
+  if (pendentes.length === 0 || !temNovo) return null;
+
+  function marcarComoVisto() {
+    const novo = Object.fromEntries(pendentes.map((l) => [l.professor_id, l.nao_entregue]));
+    localStorage.setItem(chave, JSON.stringify(novo));
+    setVistos(novo);
+  }
+
   const total = pendentes.reduce((n, l) => n + l.nao_entregue, 0);
   const nomes = pendentes.slice(0, 3).map((l) => `${l.professor} (${l.nao_entregue})`).join(", ");
   return (
@@ -119,7 +140,14 @@ export function AvisoAtrasosGestao() {
       titulo="Planejamentos atrasados!"
       detalhe={`${nomes}${pendentes.length > 3 ? ` e mais ${pendentes.length - 3}` : ""} — prazo vencido sem entrega nos últimos 30 dias.`}
       selo={`${total} ${total === 1 ? "pendente" : "pendentes"}`}
-      acao={<Link to="/prazos" className="tv-btn tv-btn-secondary" style={{ padding: "5px 12px", fontSize: 12.5 }}>Ver prazos</Link>}
+      acao={
+        <span style={{ display: "inline-flex", gap: 8 }}>
+          <Link to="/prazos" className="tv-btn tv-btn-secondary" style={{ padding: "5px 12px", fontSize: 12.5 }}>Ver prazos</Link>
+          <button className="tv-btn tv-btn-secondary" style={{ padding: "5px 12px", fontSize: 12.5 }} onClick={marcarComoVisto}>
+            <Check size={14} /> Marcar como visto
+          </button>
+        </span>
+      }
     />
   );
 }
