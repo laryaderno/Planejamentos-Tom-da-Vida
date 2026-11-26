@@ -114,8 +114,14 @@ describe("entrega do período", () => {
     expect(msg).toMatch(/Marina entregou o planejamento de Jardim 1 \(07\/12 a 11\/12\) com antecedência/);
   });
 
-  it("especialista entrega quando conclui todos os blocos que criou no período", async () => {
-    await concluirDia(u.ingles!, JARDIM1, INGLES, "2026-12-09", "09:30", "10:20");
+  it("especialista sem grade só entrega com todos os dias do período concluídos", async () => {
+    await concluirDia(u.ingles!, JARDIM1, INGLES, "2026-12-07", "09:30", "10:20");
+    await concluirDia(u.ingles!, JARDIM1, INGLES, "2026-12-08", "09:30", "10:20");
+    // Concluir os blocos já criados não basta: faltam dias da semana.
+    expect(await b.contar("select * from public.entregas where professor_id = $1", [u.ingles])).toBe(0);
+    for (const dia of ["2026-12-09", "2026-12-10", "2026-12-11"]) {
+      await concluirDia(u.ingles!, JARDIM1, INGLES, dia, "09:30", "10:20");
+    }
     expect(await b.contar("select * from public.entregas where professor_id = $1", [u.ingles])).toBe(1);
   });
 
