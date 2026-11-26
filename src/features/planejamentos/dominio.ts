@@ -51,6 +51,7 @@ export const ROTULO_CAMPO: Record<string, string> = {
   status: "Status",
   arquivado_em: "Arquivado",
   excluido_em: "Excluído",
+  aprovacao: "Avaliação",
 };
 
 /** Status do dia, derivado dos blocos (decisão D1). */

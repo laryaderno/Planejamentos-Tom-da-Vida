@@ -69,17 +69,23 @@ isOneToOne: false
                   ]
                 },"blocos": {
                   Row: {
-                    "arquivado_em": string | null,"atividades": string,"atualizado_em": string,"atualizado_por": string | null,"avaliacao": string,"conteudo": string,"criado_em": string,"disciplina_id": number,"estrategias": string,"excluido_em": string | null,"habilidades": (Database["public"]['Enums']["inteligencia"])[],"hora_fim": string,"hora_inicio": string,"id": number,"linguagens_amor": (Database["public"]['Enums']["linguagem_amor"])[],"objetivos": string,"planejamento_id": number,"professor_id": string,"recursos": string,"status": Database["public"]['Enums']["status_bloco"],"versao": number
+                    "aprovacao": string | null,"aprovacao_em": string | null,"aprovacao_obs": string | null,"aprovacao_por": string | null,"arquivado_em": string | null,"atividades": string,"atualizado_em": string,"atualizado_por": string | null,"avaliacao": string,"conteudo": string,"criado_em": string,"disciplina_id": number,"estrategias": string,"excluido_em": string | null,"habilidades": (Database["public"]['Enums']["inteligencia"])[],"hora_fim": string,"hora_inicio": string,"id": number,"linguagens_amor": (Database["public"]['Enums']["linguagem_amor"])[],"objetivos": string,"planejamento_id": number,"professor_id": string,"recursos": string,"status": Database["public"]['Enums']["status_bloco"],"versao": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "arquivado_em"?: string | null,"atividades"?: string,"atualizado_em"?: string,"atualizado_por"?: string | null,"avaliacao"?: string,"conteudo"?: string,"criado_em"?: string,"disciplina_id": number,"estrategias"?: string,"excluido_em"?: string | null,"habilidades"?: (Database["public"]['Enums']["inteligencia"])[],"hora_fim": string,"hora_inicio": string,"id"?: never,"linguagens_amor"?: (Database["public"]['Enums']["linguagem_amor"])[],"objetivos"?: string,"planejamento_id": number,"professor_id": string,"recursos"?: string,"status"?: Database["public"]['Enums']["status_bloco"],"versao"?: number
+                    "aprovacao"?: string | null,"aprovacao_em"?: string | null,"aprovacao_obs"?: string | null,"aprovacao_por"?: string | null,"arquivado_em"?: string | null,"atividades"?: string,"atualizado_em"?: string,"atualizado_por"?: string | null,"avaliacao"?: string,"conteudo"?: string,"criado_em"?: string,"disciplina_id": number,"estrategias"?: string,"excluido_em"?: string | null,"habilidades"?: (Database["public"]['Enums']["inteligencia"])[],"hora_fim": string,"hora_inicio": string,"id"?: never,"linguagens_amor"?: (Database["public"]['Enums']["linguagem_amor"])[],"objetivos"?: string,"planejamento_id": number,"professor_id": string,"recursos"?: string,"status"?: Database["public"]['Enums']["status_bloco"],"versao"?: number
                   }
                   Update: {
-                    "arquivado_em"?: string | null,"atividades"?: string,"atualizado_em"?: string,"atualizado_por"?: string | null,"avaliacao"?: string,"conteudo"?: string,"criado_em"?: string,"disciplina_id"?: number,"estrategias"?: string,"excluido_em"?: string | null,"habilidades"?: (Database["public"]['Enums']["inteligencia"])[],"hora_fim"?: string,"hora_inicio"?: string,"id"?: never,"linguagens_amor"?: (Database["public"]['Enums']["linguagem_amor"])[],"objetivos"?: string,"planejamento_id"?: number,"professor_id"?: string,"recursos"?: string,"status"?: Database["public"]['Enums']["status_bloco"],"versao"?: number
+                    "aprovacao"?: string | null,"aprovacao_em"?: string | null,"aprovacao_obs"?: string | null,"aprovacao_por"?: string | null,"arquivado_em"?: string | null,"atividades"?: string,"atualizado_em"?: string,"atualizado_por"?: string | null,"avaliacao"?: string,"conteudo"?: string,"criado_em"?: string,"disciplina_id"?: number,"estrategias"?: string,"excluido_em"?: string | null,"habilidades"?: (Database["public"]['Enums']["inteligencia"])[],"hora_fim"?: string,"hora_inicio"?: string,"id"?: never,"linguagens_amor"?: (Database["public"]['Enums']["linguagem_amor"])[],"objetivos"?: string,"planejamento_id"?: number,"professor_id"?: string,"recursos"?: string,"status"?: Database["public"]['Enums']["status_bloco"],"versao"?: number
                   }
                   Relationships: [
                     {
+      foreignKeyName: "blocos_aprovacao_por_fkey"
+      columns: ["aprovacao_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "blocos_atualizado_por_fkey"
       columns: ["atualizado_por"]
 isOneToOne: false
@@ -526,6 +532,9 @@ isOneToOne: false
                            },
 "avaliar_atividade":
 { Args: { "p_aprovar": boolean,"p_id": number,"p_motivo"?: string,"p_tema"?: string,"p_titulo"?: string }; Returns: undefined
+                           },
+"avaliar_bloco":
+{ Args: { "p_decisao": string,"p_id": number,"p_observacao"?: string }; Returns: undefined
                            },
 "avaliar_entregas_do_periodo":
 { Args: { "p_periodo": number }; Returns: undefined

@@ -8,6 +8,7 @@ import { useHistorico, useNomes, type Bloco } from "./api";
 import { INTELIGENCIAS, LINGUAGENS_AMOR, ROTULO_CAMPO, STATUS, type Inteligencia, type LinguagemAmor, type StatusBloco } from "./dominio";
 
 function legivel(campo: string, valor: string | null): string {
+  if (campo === "aprovacao") return valor === "aprovado" ? "Aprovado" : valor === "revisar" ? "Revisar" : "Aguardando aprovação";
   if (valor === null || valor === "") return "—";
   if (campo === "status") return STATUS[valor as StatusBloco]?.rotulo ?? valor;
   if (campo === "linguagem_amor") return LINGUAGENS_AMOR[valor as LinguagemAmor] ?? valor;

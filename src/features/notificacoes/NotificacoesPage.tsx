@@ -76,7 +76,7 @@ export function NotificacoesPage() {
             title="Nenhum aviso."
             description={
               eu.papel === "professor"
-                ? "Aqui aparecem a confirmação das suas entregas (com antecedência, no prazo ou com atraso) e o resultado das atividades que você enviou para o banco."
+                ? "Aqui aparecem a confirmação das suas entregas, a aprovação ou o pedido de revisão dos seus planejamentos, as novas notas e o resultado das atividades que você enviou para o banco."
                 : "Aqui aparecem as entregas de planejamento dos professores, com a situação em relação ao prazo, e as novas atividades enviadas para aprovação."
             }
           />
