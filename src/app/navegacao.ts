@@ -9,7 +9,6 @@ import {
   GraduationCap,
   LayoutGrid,
   ScrollText,
-  ShieldCheck,
   UserCircle,
   Users,
 } from "lucide-react";
@@ -26,7 +25,6 @@ export interface ItemNavegacao {
 }
 
 const GESTAO: Papel[] = ["administrador", "diretor", "secretaria", "coordenador"];
-const DIRECAO: Papel[] = ["administrador", "diretor", "secretaria"];
 
 export const NAVEGACAO: ItemNavegacao[] = [
   { caminho: "/visao-geral", rotulo: "Visão geral", icone: LayoutGrid, papeis: GESTAO },
@@ -35,8 +33,7 @@ export const NAVEGACAO: ItemNavegacao[] = [
   { caminho: "/meus-horarios", rotulo: "Meus horários", icone: Clock, papeis: ["professor"] },
   { caminho: "/grade", rotulo: "Grade horária", icone: Clock, papeis: GESTAO },
   { caminho: "/turmas", rotulo: "Turmas", icone: GraduationCap, papeis: GESTAO },
-  { caminho: "/professores", rotulo: "Professores", icone: Users, papeis: GESTAO },
-  { caminho: "/equipe", rotulo: "Equipe", icone: ShieldCheck, papeis: DIRECAO },
+  { caminho: "/equipe", rotulo: "Equipe", icone: Users, papeis: GESTAO },
   { caminho: "/prazos", rotulo: "Prazos e ciclos", icone: CalendarDays, papeis: ["diretor", "secretaria"] },
   { caminho: "/conteudo", rotulo: "Conteúdo programático", icone: BookOpen, papeis: GESTAO },
   { caminho: "/banco", rotulo: "Banco de atividades", icone: Archive, papeis: [...GESTAO, "professor"] },
