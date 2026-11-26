@@ -20,6 +20,7 @@ import { formatarData, useDisciplinas, useEtapas, useVinculos } from "@/lib/cons
 import { mensagemDeErro } from "@/lib/erros";
 import { NIVEL, podeEditarEtapa } from "@/lib/papeis";
 import { C } from "@/styles/tokens";
+import { AvaliacoesBanco } from "./AvaliacoesBanco";
 import { PlanejamentosArquivados } from "./PlanejamentosArquivados";
 
 /** Normaliza para busca: minúsculas, sem acentos. */
@@ -28,11 +29,11 @@ function normalizar(t: string) {
 }
 
 export function BancoAtividadesPage() {
-  const [aba, setAba] = useState<"atividades" | "arquivados">("atividades");
+  const [aba, setAba] = useState<"atividades" | "avaliacoes" | "arquivados">("atividades");
   return (
     <div>
       <div role="tablist" style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-        {([["atividades", "Atividades"], ["arquivados", "Planejamentos arquivados"]] as const).map(([id, rotulo]) => (
+        {([["atividades", "Atividades"], ["avaliacoes", "Avaliações"], ["arquivados", "Planejamentos arquivados"]] as const).map(([id, rotulo]) => (
           <button
             key={id}
             role="tab"
@@ -48,7 +49,7 @@ export function BancoAtividadesPage() {
           </button>
         ))}
       </div>
-      {aba === "atividades" ? <Atividades /> : <Arquivados />}
+      {aba === "atividades" ? <Atividades /> : aba === "avaliacoes" ? <AvaliacoesBanco /> : <Arquivados />}
     </div>
   );
 }

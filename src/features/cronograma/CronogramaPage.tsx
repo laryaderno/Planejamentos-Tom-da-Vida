@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { CalendarPlus, ClipboardList, Pencil, Trash2 } from "lucide-react";
+import { CalendarDays, ClipboardList, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useSearchParams } from "react-router";
 import { Aviso } from "@/components/Aviso";
 import { ConfirmarAcao } from "@/components/ConfirmarAcao";
 import { EmptyState } from "@/components/EmptyState";
@@ -13,10 +14,13 @@ import { dataModelo } from "@/features/exportacao/planejamento";
 import { hojeISO } from "@/features/planejamentos/dominio";
 import { useMinhasTurmas } from "@/features/planejamentos/PlanejamentosPage";
 import { useDisciplinas } from "@/lib/consultas";
+import { useNomes } from "@/features/planejamentos/api";
 import { mensagemDeErro, verificar } from "@/lib/erros";
 import { supabase } from "@/lib/supabase";
 import { C } from "@/styles/tokens";
+import { BotoesAprovacao, SituacaoAvaliacao } from "./AprovacaoAvaliacao";
 import { useAvaliacoes, useProfessoresDaTurma, type Avaliacao, type TipoAvaliacao } from "./api";
+import { CalendarioAnoModal } from "./CalendarioAnoModal";
 
 const GESTAO = ["diretor", "secretaria", "coordenador"];
 /** Bimestre provável pela data de hoje (fev–abr = 1º, mai–jul = 2º, ago–set = 3º, out–dez = 4º). */
@@ -31,17 +35,21 @@ export function CronogramaPage() {
   const { turmas, erro } = useMinhasTurmas();
   const disciplinas = useDisciplinas();
   const qc = useQueryClient();
-  const [turmaId, setTurmaId] = useState<number | null>(null);
-  const [tipo, setTipo] = useState<TipoAvaliacao>("bimestral");
-  const [bimestre, setBimestre] = useState(bimestreAtual());
-  const [ano, setAno] = useState(Number(hojeISO().slice(0, 4)));
-  const [agendando, setAgendando] = useState<Avaliacao | "nova" | null>(null);
+  // Os links das notificações abrem já na turma, tipo, bimestre e ano certos.
+  const [params] = useSearchParams();
+  const [turmaId, setTurmaId] = useState<number | null>(params.get("turma") ? Number(params.get("turma")) : null);
+  const [tipo, setTipo] = useState<TipoAvaliacao>(params.get("tipo") === "mensal" ? "mensal" : "bimestral");
+  const [bimestre, setBimestre] = useState(Number(params.get("bimestre")) || bimestreAtual());
+  const [ano, setAno] = useState(Number(params.get("ano")) || Number(hojeISO().slice(0, 4)));
+  const [calendario, setCalendario] = useState(false);
+  const [mensagem, setMensagem] = useState<string | null>(null);
   const [cadastrando, setCadastrando] = useState<Avaliacao | null>(null);
   const [removendo, setRemovendo] = useState<Avaliacao | null>(null);
 
   const turma = turmas?.find((t) => t.id === (turmaId ?? turmas[0]?.id)) ?? null;
   const avaliacoes = useAvaliacoes(turma?.id, ano);
   const professores = useProfessoresDaTurma(turma?.id);
+  const nomes = useNomes((avaliacoes.data ?? []).map((a) => a.aprovacao_por));
 
   if (erro) return <Aviso>{mensagemDeErro(erro)}</Aviso>;
   if (!turmas || !disciplinas.data) return <Carregando />;
@@ -57,6 +65,7 @@ export function CronogramaPage() {
     .filter((a) => a.tipo === tipo && a.bimestre === bimestre)
     .sort((a, b) => a.data.localeCompare(b.data) || nomeDisc(a.disciplina_id).localeCompare(nomeDisc(b.disciplina_id)));
   const pendentes = lista.filter((a) => !a.conteudo.trim()).length;
+  const nomePessoa = (id: string) => (id === eu.id ? "você" : (nomes.data?.get(id) ?? "…"));
   const atualizar = () => qc.invalidateQueries({ queryKey: ["avaliacoes"] });
 
   // Especialista aparece como "Prof(a) …"; a regente já está no cabeçalho.
@@ -106,8 +115,8 @@ export function CronogramaPage() {
           {[ano - 1, ano, ano + 1].map((a) => <option key={a} value={a}>{a}</option>)}
         </select>
         {souGestao && (
-          <button className="tv-btn tv-btn-primary" style={{ marginLeft: "auto" }} onClick={() => setAgendando("nova")}>
-            <CalendarPlus size={15} /> Agendar avaliação
+          <button className="tv-btn tv-btn-primary" style={{ marginLeft: "auto" }} onClick={() => setCalendario(true)}>
+            <CalendarDays size={15} /> Calendário do ano
           </button>
         )}
       </div>
@@ -126,6 +135,7 @@ export function CronogramaPage() {
         <BotoesExportar montar={montar} desabilitado={lista.length === 0} />
       </div>
 
+      {mensagem && <div style={{ marginBottom: 12 }}><Aviso tipo="sucesso">{mensagem}</Aviso></div>}
       {avaliacoes.error && <Aviso>{mensagemDeErro(avaliacoes.error)}</Aviso>}
       {!avaliacoes.data ? (
         <Carregando />
@@ -135,7 +145,7 @@ export function CronogramaPage() {
           title="Nenhuma avaliação agendada."
           description={
             souGestao
-              ? "Agende as datas das avaliações desta turma. Depois, cada professor cadastra o conteúdo da sua disciplina."
+              ? "Abra o Calendário do ano e preencha as datas das avaliações desta turma. Depois, cada professor cadastra o conteúdo da sua disciplina."
               : "As datas são definidas pela Secretaria, Coordenação ou Direção. Quando estiverem agendadas, você cadastra o conteúdo aqui."
           }
         />
@@ -144,7 +154,7 @@ export function CronogramaPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
             <thead>
               <tr style={{ background: "#F9FAFB", textAlign: "left" }}>
-                {["Data", "Disciplina", "Conteúdo", ""].map((h) => (
+                {["Data", "Disciplina", "Conteúdo", "Situação", ""].map((h) => (
                   <th key={h} style={{ padding: "11px 14px", fontWeight: 600, color: C.inkSoft, fontSize: 12.5 }}>{h}</th>
                 ))}
               </tr>
@@ -153,7 +163,7 @@ export function CronogramaPage() {
               {lista.map((a, i) => {
                 const primeiraDoDia = i === 0 || lista[i - 1]!.data !== a.data;
                 const prof = rotuloProfessor(a.disciplina_id);
-                const posso = leciono(a.disciplina_id) || souGestao;
+                const posso = leciono(a.disciplina_id);
                 return (
                   <tr key={a.id} style={{ borderTop: `1px solid ${primeiraDoDia ? C.border : "#F3F4F6"}`, verticalAlign: "top" }}>
                     <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
@@ -188,19 +198,26 @@ export function CronogramaPage() {
                       ) : (
                         <span style={{ fontStyle: "italic", color: "#B45309" }}>Conteúdo ainda não cadastrado.</span>
                       )}
+                      {a.aprovacao === "revisar" && a.aprovacao_obs && (
+                        <span style={{ display: "block", marginTop: 8, padding: "7px 10px", borderRadius: 8, background: "#FFF7ED", border: "1px solid #FED7AA", fontSize: 12.5, color: "#7C2D12" }}>
+                          <strong>Revisar:</strong> {a.aprovacao_obs}
+                          {a.aprovacao_por && <> — {nomePessoa(a.aprovacao_por)}</>}
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ padding: "12px 14px" }}>
+                      <SituacaoAvaliacao a={a} nome={nomePessoa} />
                     </td>
                     <td style={{ padding: "12px 14px", textAlign: "right", whiteSpace: "nowrap" }}>
                       <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
                         {posso && (
                           <button className={a.conteudo.trim() ? "tv-btn-text" : "tv-btn tv-btn-primary"} style={{ fontSize: 12.5, ...(a.conteudo.trim() ? {} : { padding: "5px 10px" }) }} onClick={() => setCadastrando(a)}>
-                            {a.conteudo.trim() ? "Editar conteúdo" : "Cadastrar avaliação"}
+                            {!a.conteudo.trim() ? "Cadastrar avaliação" : a.aprovacao === "revisar" ? "Revisar conteúdo" : "Editar conteúdo"}
                           </button>
                         )}
+                        {souGestao && <BotoesAprovacao a={a} aoAvaliar={() => void atualizar()} />}
                         {souGestao && (
                           <span style={{ display: "inline-flex", gap: 10 }}>
-                            <button className="tv-btn-text" style={{ display: "inline-flex", gap: 4, alignItems: "center", fontSize: 12.5 }} onClick={() => setAgendando(a)}>
-                              <Pencil size={12} /> Data
-                            </button>
                             <button className="tv-btn-text-danger" style={{ display: "inline-flex", gap: 4, alignItems: "center", fontSize: 12.5 }} onClick={() => setRemovendo(a)}>
                               <Trash2 size={12} /> Remover
                             </button>
@@ -216,24 +233,19 @@ export function CronogramaPage() {
         </div>
       )}
 
-      {agendando && (
-        <AgendarModal
-          avaliacao={agendando === "nova" ? null : agendando}
-          disciplinasDaTurma={[...new Set(profs.map((p) => p.disciplina_id))]
-            .filter((d) => agendando !== "nova" || !lista.some((a) => a.disciplina_id === d))
+      {calendario && (
+        <CalendarioAnoModal
+          turma={turma}
+          ano={ano}
+          disciplinas={[...new Set(profs.map((p) => p.disciplina_id))]
             .map((d) => ({ id: d, nome: nomeDisc(d) }))
-            .sort((a, b) => a.nome.localeCompare(b.nome))}
-          rotulo={`${tipo === "mensal" ? "Avaliação mensal" : "Avaliação bimestral"} · ${bimestre}º bimestre de ${ano} · ${turma.nome}`}
-          onFechar={() => setAgendando(null)}
-          onSalvar={async (disciplina, data) => {
-            verificar(
-              await supabase.rpc("agendar_avaliacao", {
-                p_id: (agendando === "nova" ? null : agendando.id) as never,
-                p_turma: turma.id, p_disciplina: disciplina, p_tipo: tipo, p_bimestre: bimestre, p_ano: ano, p_data: data,
-              }),
-            );
+            .sort((x, y) => x.nome.localeCompare(y.nome))}
+          avaliacoes={avaliacoes.data ?? []}
+          onFechar={() => setCalendario(false)}
+          aoSalvar={async (n) => {
             await atualizar();
-            setAgendando(null);
+            setCalendario(false);
+            setMensagem(n ? `Calendário salvo: ${n} ${n === 1 ? "alteração" : "alterações"}.` : "Nenhuma data mudou.");
           }}
         />
       )}
@@ -279,62 +291,6 @@ function Links({ texto }: { texto: string }) {
         ),
       )}
     </>
-  );
-}
-
-function AgendarModal({
-  avaliacao, disciplinasDaTurma, rotulo, onFechar, onSalvar,
-}: {
-  avaliacao: Avaliacao | null;
-  disciplinasDaTurma: { id: number; nome: string }[];
-  rotulo: string;
-  onFechar: () => void;
-  onSalvar: (disciplina: number, data: string) => Promise<void>;
-}) {
-  const [disciplina, setDisciplina] = useState<number | "">(avaliacao?.disciplina_id ?? disciplinasDaTurma[0]?.id ?? "");
-  const [data, setData] = useState(avaliacao?.data ?? hojeISO());
-  const [erro, setErro] = useState<string | null>(null);
-  const [enviando, setEnviando] = useState(false);
-
-  async function salvar() {
-    setEnviando(true);
-    setErro(null);
-    try {
-      await onSalvar(Number(disciplina), data);
-    } catch (e) {
-      setErro(mensagemDeErro(e));
-      setEnviando(false);
-    }
-  }
-
-  return (
-    <Modal
-      titulo={avaliacao ? "Mudar a data da avaliação" : "Agendar avaliação"}
-      subtitulo={rotulo}
-      onFechar={onFechar}
-      rodape={
-        <>
-          <button className="tv-btn tv-btn-secondary" onClick={onFechar} disabled={enviando}>Cancelar</button>
-          <button className="tv-btn tv-btn-primary" onClick={() => void salvar()} disabled={enviando || disciplina === "" || !data}>
-            {enviando ? "Salvando…" : "Salvar"}
-          </button>
-        </>
-      }
-    >
-      <label style={{ display: "block", marginBottom: 14 }}>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>Disciplina</span>
-        <select className="tv-input" style={{ marginTop: 6 }} value={disciplina} disabled={!!avaliacao} onChange={(e) => setDisciplina(Number(e.target.value))}>
-          {avaliacao && <option value={avaliacao.disciplina_id}>{disciplinasDaTurma.find((d) => d.id === avaliacao.disciplina_id)?.nome ?? "Disciplina"}</option>}
-          {!avaliacao && disciplinasDaTurma.length === 0 && <option value="">Todas as disciplinas já têm avaliação agendada</option>}
-          {!avaliacao && disciplinasDaTurma.map((d) => <option key={d.id} value={d.id}>{d.nome}</option>)}
-        </select>
-      </label>
-      <label style={{ display: "block", marginBottom: 14 }}>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>Data da avaliação</span>
-        <input type="date" className="tv-input" style={{ marginTop: 6 }} value={data} onChange={(e) => setData(e.target.value)} />
-      </label>
-      {erro && <Aviso>{erro}</Aviso>}
-    </Modal>
   );
 }
 
