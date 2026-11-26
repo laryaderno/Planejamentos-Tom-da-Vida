@@ -94,3 +94,77 @@ describe("professores da turma", () => {
     expect(await b.como(u.marina!, () => b.contar("select * from public.professores_da_turma($1)", [ANO1]))).toBe(0);
   });
 });
+
+describe("aprovação das avaliações", () => {
+  const notif = (uid: string, tipo: string) =>
+    b.db.query<{ titulo: string; mensagem: string }>("select titulo, mensagem from public.notificacoes where usuario_id = $1 and tipo = $2 order by id", [uid, tipo]).then((r) => r.rows);
+  const aprov = async () =>
+    (await b.db.query<{ aprovacao: string | null }>("select aprovacao from public.avaliacoes where id = $1", [AV])).rows[0]!.aprovacao;
+
+  it("gestão não cadastra o conteúdo — só o professor", async () => {
+    await expect(cadastrar(u.secretaria!, AV, "x")).rejects.toThrow(/professor da disciplina/);
+  });
+
+  it("ao cadastrar, a Coordenação da etapa (ou a Secretaria) é avisada", async () => {
+    await cadastrar(u.camila!, AV, "My school - pages 100 to 116");
+    // 1º Ano A é do Fundamental I, sem Coordenação aqui: vai para a Secretaria
+    const n = (await notif(u.secretaria!, "avaliacao_pendente")).at(-1);
+    expect(n!.titulo).toBe("Avaliação para aprovar");
+    expect(n!.mensagem).toMatch(/^Camila cadastrou a Inglês · 1º Ano A · avaliação bimestral do 3º bimestre \(16\/09\/2026\)\.$/);
+  });
+
+  it("Revisar exige observação e avisa o professor; ao salvar de novo, quem pediu é avisado", async () => {
+    await expect(valor(u.secretaria!, "public.avaliar_avaliacao($1, 'revisar', ' ')", [AV])).rejects.toThrow(/precisa revisar/);
+    await valor(u.secretaria!, "public.avaliar_avaliacao($1, 'revisar', 'Incluir as páginas.')", [AV]);
+    expect(await aprov()).toBe("revisar");
+    const [r] = await notif(u.camila!, "avaliacao_revisar");
+    expect(r!.mensagem).toMatch(/Incluir as páginas\.$/);
+    await cadastrar(u.camila!, AV, "My school - pages 100 to 116 (revisado)");
+    expect(await aprov()).toBeNull();
+    const [feita] = await notif(u.secretaria!, "avaliacao_revisada");
+    expect(feita!.titulo).toBe("Avaliação revisada");
+  });
+
+  it("Aprovar avisa o professor; alterar depois volta a aguardar", async () => {
+    await valor(u.secretaria!, "public.avaliar_avaliacao($1, 'aprovado', null)", [AV]);
+    expect(await aprov()).toBe("aprovado");
+    expect(await notif(u.camila!, "avaliacao_aprovada")).toHaveLength(1);
+    await cadastrar(u.camila!, AV, "Outra versão");
+    expect(await aprov()).toBeNull();
+    await valor(u.secretaria!, "public.avaliar_avaliacao($1, 'aprovado', null)", [AV]);
+  });
+
+  it("não aprova avaliação sem conteúdo; professor não aprova", async () => {
+    const vazia = Number(await agendar(u.secretaria!, ANO1, POLIVALENTE, "2026-09-14"));
+    await expect(valor(u.secretaria!, "public.avaliar_avaliacao($1, 'aprovado', null)", [vazia])).rejects.toThrow(/ainda não cadastrou/);
+    await expect(valor(u.camila!, "public.avaliar_avaliacao($1, 'aprovado', null)", [AV])).rejects.toThrow(/Coordenação, a Secretaria ou a Direção/);
+  });
+
+  it("aprovada aparece no banco para professores da mesma etapa, não de outra", async () => {
+    u.outra = await b.criarUsuario({ email: "outra@t.com", nome: "Outra F1", papel: "professor" });
+    const F1 = await b.id("etapas", "Ensino Fundamental I");
+    const ANO2 = await b.id("turmas", "2º Ano A");
+    await b.db.query("insert into public.vinculos (usuario_id, etapa_id, turma_id, disciplina_id, regente) values ($1, $2, $3, $4, true)", [u.outra, F1, ANO2, POLIVALENTE]);
+    expect(await b.como(u.outra!, () => b.contar("select * from public.avaliacoes where id = $1", [AV]))).toBe(1);
+    expect(await b.como(u.marina!, () => b.contar("select * from public.avaliacoes where id = $1", [AV]))).toBe(0);
+  });
+});
+
+describe("calendário do ano de uma vez", () => {
+  it("cria, muda datas e remove (só as sem conteúdo)", async () => {
+    const itens = (data: string | null) => JSON.stringify([
+      { disciplina_id: POLIVALENTE, tipo: "mensal", bimestre: 1, data },
+      { disciplina_id: INGLES, tipo: "mensal", bimestre: 1, data: "2027-03-16" },
+    ]);
+    const n = await valor<number>(u.secretaria!, "public.agendar_avaliacoes($1, 2027::smallint, $2)", [ANO1, itens("2027-03-15")]);
+    expect(n).toBe(2);
+    expect(await valor<number>(u.secretaria!, "public.agendar_avaliacoes($1, 2027::smallint, $2)", [ANO1, itens("2027-03-15")])).toBe(0);
+    expect(await valor<number>(u.secretaria!, "public.agendar_avaliacoes($1, 2027::smallint, $2)", [ANO1, itens(null)])).toBe(1);
+    expect(await b.contar("select * from public.avaliacoes where turma_id = $1 and ano = 2027", [ANO1])).toBe(1);
+  });
+
+  it("Coordenação de outra etapa e professor não agendam", async () => {
+    await expect(valor(u.coordEI!, "public.agendar_avaliacoes($1, 2027::smallint, '[]')", [ANO1])).rejects.toThrow(/permissão/);
+    await expect(valor(u.camila!, "public.agendar_avaliacoes($1, 2027::smallint, '[]')", [ANO1])).rejects.toThrow(/Secretaria, a Coordenação ou a Direção/);
+  });
+});

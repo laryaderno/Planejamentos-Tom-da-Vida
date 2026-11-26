@@ -241,13 +241,22 @@ turmas escolhidas; senão, a etapa ou todas) e é usada na entrega, nos e-mails 
 
 ### 3.3.3 Cronograma de Avaliação (substitui o Conteúdo programático)
 
-No início do ano, Secretaria, Coordenação (na sua etapa) e Direção **agendam** as avaliações de cada turma
-(`avaliacoes`, `agendar_avaliacao`): disciplina, tipo (mensal ou bimestral), bimestre e data — uma por disciplina,
-tipo e bimestre. O professor da disciplina naquela turma usa **Cadastrar avaliação** (`cadastrar_avaliacao`):
-conteúdo (obrigatório), material de apoio (links) e orientações, que viram anexos numerados no documento. A tela
-*Cronograma de Avaliação* mostra DATA | DISCIPLINA | CONTEÚDO por turma, tipo e bimestre e exporta em PDF/Word no
-formato do modelo da escola (`montarCronograma`). `professores_da_turma` dá o nome do(a) regente no cabeçalho e
-"Prof(a) …" dos especialistas. O antigo Conteúdo programático (`conteudo_programatico`) foi removido.
+**Datas (gestão):** no início do ano, com o calendário acadêmico em mãos, Secretaria, Coordenação (na sua etapa) ou
+Direção abre *Cronograma de Avaliação > Calendário do ano* e preenche, para cada turma, as datas de todas as
+avaliações do ano (disciplinas nas linhas; mensal e bimestral de cada bimestre nas colunas) e salva de uma vez
+(`agendar_avaliacoes`). Data apagada remove a avaliação, se o professor ainda não cadastrou o conteúdo.
+
+**Conteúdo (só o professor):** o professor da disciplina naquela turma usa **Cadastrar avaliação**
+(`cadastrar_avaliacao`): conteúdo (obrigatório), material de apoio (links) e orientações (viram anexos numerados).
+Ao cadastrar, a Coordenação da etapa é avisada (sem Coordenação, a Secretaria).
+
+**Revisão e aprovação:** a gestão da etapa usa **Revisar** (com o que rever) ou **Aprovar** (`avaliar_avaliacao`); o
+professor é notificado. Salvar de novo depois de um pedido de revisão avisa quem pediu; alterar uma avaliação
+aprovada faz ela voltar a aguardar aprovação. Situações: conteúdo pendente, aguardando aprovação, revisar, aprovada.
+
+**Banco de atividades > Avaliações:** as aprovadas ficam visíveis para quem é da mesma etapa, por disciplina e com
+busca. O cronograma da turma exporta em PDF/Word no formato do modelo da escola (`montarCronograma`), com o(a)
+regente no cabeçalho e "Prof(a) …" dos especialistas (`professores_da_turma`).
 
 ### 3.2.1 Aprovação do planejamento e avisos de nota
 

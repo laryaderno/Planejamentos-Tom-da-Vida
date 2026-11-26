@@ -69,19 +69,25 @@ isOneToOne: false
                   ]
                 },"avaliacoes": {
                   Row: {
-                    "agendada_em": string,"agendada_por": string | null,"ano": number,"bimestre": number,"conteudo": string,"data": string,"disciplina_id": number,"id": number,"material": string,"orientacoes": string,"preenchida_em": string | null,"preenchida_por": string | null,"tipo": string,"turma_id": number
+                    "agendada_em": string,"agendada_por": string | null,"ano": number,"aprovacao": string | null,"aprovacao_em": string | null,"aprovacao_obs": string | null,"aprovacao_por": string | null,"bimestre": number,"conteudo": string,"data": string,"disciplina_id": number,"id": number,"material": string,"orientacoes": string,"preenchida_em": string | null,"preenchida_por": string | null,"tipo": string,"turma_id": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "agendada_em"?: string,"agendada_por"?: string | null,"ano": number,"bimestre": number,"conteudo"?: string,"data": string,"disciplina_id": number,"id"?: never,"material"?: string,"orientacoes"?: string,"preenchida_em"?: string | null,"preenchida_por"?: string | null,"tipo": string,"turma_id": number
+                    "agendada_em"?: string,"agendada_por"?: string | null,"ano": number,"aprovacao"?: string | null,"aprovacao_em"?: string | null,"aprovacao_obs"?: string | null,"aprovacao_por"?: string | null,"bimestre": number,"conteudo"?: string,"data": string,"disciplina_id": number,"id"?: never,"material"?: string,"orientacoes"?: string,"preenchida_em"?: string | null,"preenchida_por"?: string | null,"tipo": string,"turma_id": number
                   }
                   Update: {
-                    "agendada_em"?: string,"agendada_por"?: string | null,"ano"?: number,"bimestre"?: number,"conteudo"?: string,"data"?: string,"disciplina_id"?: number,"id"?: never,"material"?: string,"orientacoes"?: string,"preenchida_em"?: string | null,"preenchida_por"?: string | null,"tipo"?: string,"turma_id"?: number
+                    "agendada_em"?: string,"agendada_por"?: string | null,"ano"?: number,"aprovacao"?: string | null,"aprovacao_em"?: string | null,"aprovacao_obs"?: string | null,"aprovacao_por"?: string | null,"bimestre"?: number,"conteudo"?: string,"data"?: string,"disciplina_id"?: number,"id"?: never,"material"?: string,"orientacoes"?: string,"preenchida_em"?: string | null,"preenchida_por"?: string | null,"tipo"?: string,"turma_id"?: number
                   }
                   Relationships: [
                     {
       foreignKeyName: "avaliacoes_agendada_por_fkey"
       columns: ["agendada_por"]
+isOneToOne: false
+      referencedRelation: "perfis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "avaliacoes_aprovacao_por_fkey"
+      columns: ["aprovacao_por"]
 isOneToOne: false
       referencedRelation: "perfis"
       referencedColumns: ["id"]
@@ -617,6 +623,9 @@ isOneToOne: false
 "agendar_avaliacao":
 { Args: { "p_ano": number,"p_bimestre": number,"p_data": string,"p_disciplina": number,"p_id": number,"p_tipo": string,"p_turma": number }; Returns: number
                            },
+"agendar_avaliacoes":
+{ Args: { "p_ano": number,"p_itens": Json,"p_turma": number }; Returns: number
+                           },
 "alterar_vinculos":
 { Args: { "p_usuario": string,"p_vinculos": Json }; Returns: undefined
                            },
@@ -625,6 +634,9 @@ isOneToOne: false
                            },
 "avaliar_atividade":
 { Args: { "p_aprovar": boolean,"p_id": number,"p_motivo"?: string,"p_tema"?: string,"p_titulo"?: string }; Returns: undefined
+                           },
+"avaliar_avaliacao":
+{ Args: { "p_decisao": string,"p_id": number,"p_observacao"?: string }; Returns: undefined
                            },
 "avaliar_bloco":
 { Args: { "p_decisao": string,"p_id": number,"p_observacao"?: string }; Returns: undefined
@@ -646,6 +658,9 @@ isOneToOne: false
                            },
 "desativar_turma":
 { Args: { "p_id": number }; Returns: undefined
+                           },
+"descricao_avaliacao":
+{ Args: { "p_id": number }; Returns: string
                            },
 "dias_uteis_entre":
 { Args: { "a": string,"b": string,"p_etapa"?: number }; Returns: number
@@ -684,6 +699,9 @@ isOneToOne: false
                            },
 "limite_arquivo":
 { Args: { "p_tipo": string }; Returns: number
+                           },
+"link_avaliacao":
+{ Args: { "p_id": number }; Returns: string
                            },
 "marcar_notificacoes_lidas":
 { Args: { "p_ids"?: (number)[] }; Returns: undefined
