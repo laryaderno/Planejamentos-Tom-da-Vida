@@ -1,11 +1,11 @@
-import { useEntregas, usePeriodos, type Entrega, type Periodo } from "@/features/notificacoes/api";
+import { periodoValeParaTurma, useEntregas, usePeriodos, type Entrega, type Periodo } from "@/features/notificacoes/api";
 import { hojeISO } from "./dominio";
 
 export type SituacaoProfessor = Entrega["situacao"] | "nao_entregue" | "pendente";
 
-/** Período de entrega que cobre a data para a etapa da turma. */
-export function periodoDaData(periodos: Periodo[] | undefined, etapaId: number, data: string): Periodo | undefined {
-  return periodos?.find((p) => p.inicio <= data && data <= p.fim && (p.etapa_id === null || p.etapa_id === etapaId));
+/** Período de entrega que cobre a data para a turma (personalizado, da etapa ou de todas). */
+export function periodoDaData(periodos: Periodo[] | undefined, turma: { id: number; etapa_id: number }, data: string): Periodo | undefined {
+  return periodos?.find((p) => p.inicio <= data && data <= p.fim && periodoValeParaTurma(p, turma));
 }
 
 /** Situação da entrega de um professor numa turma, no período: entregue (com a situação), não entregue (prazo vencido) ou pendente. */
@@ -29,7 +29,7 @@ export function useAtraso() {
   const periodos = usePeriodos();
   const entregas = useEntregas();
   return (turma: { id: number; etapa_id: number }, professorId: string, data: string): boolean => {
-    const periodo = periodoDaData(periodos.data, turma.etapa_id, data);
+    const periodo = periodoDaData(periodos.data, turma, data);
     if (!periodo) return false;
     const s = situacaoDoProfessor(periodo, entregas.data, professorId, turma.id);
     return s === "atrasado" || s === "nao_entregue";

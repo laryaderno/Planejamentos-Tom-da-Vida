@@ -1,5 +1,7 @@
 import { Clock, Lock, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useSearchParams } from "react-router";
+import { HorariosPLGestao } from "./HorariosPL";
 import { Aviso } from "@/components/Aviso";
 import { EmptyState } from "@/components/EmptyState";
 import { Modal } from "@/components/Modal";
@@ -21,8 +23,41 @@ function chaveAula(a: AulaGrade) {
   return `${a.dia_semana}|${hora(a.hora_inicio)}|${hora(a.hora_fim)}|${a.disciplina_id}|${a.professor_id}|${a.rotulo ?? ""}`;
 }
 
-/** Grade horária de cada turma (Coordenação na sua etapa, Secretaria, Direção). */
+/** Grade horária: a grade de cada turma e os horários de PL dos professores (abas). */
 export function GradeHorariaPage() {
+  const [params, setParams] = useSearchParams();
+  const aba = params.get("aba") === "pl" ? "pl" : "grade";
+  return (
+    <div>
+      <div role="tablist" style={{ display: "flex", gap: 8, marginBottom: 18 }}>
+        {(
+          [
+            ["grade", "Grade das turmas"],
+            ["pl", "Horários de PL"],
+          ] as const
+        ).map(([id, rotulo]) => (
+          <button
+            key={id}
+            role="tab"
+            aria-selected={aba === id}
+            onClick={() => setParams(id === "pl" ? { aba: "pl" } : {}, { replace: true })}
+            style={{
+              fontSize: 13, fontWeight: 600, padding: "7px 13px", borderRadius: 999, cursor: "pointer",
+              background: aba === id ? C.primary : "#fff", color: aba === id ? "#fff" : C.inkSoft,
+              border: `1px solid ${aba === id ? C.primary : C.border}`,
+            }}
+          >
+            {rotulo}
+          </button>
+        ))}
+      </div>
+      {aba === "pl" ? <HorariosPLGestao /> : <GradeDasTurmas />}
+    </div>
+  );
+}
+
+/** Grade horária de cada turma (Coordenação na sua etapa, Secretaria, Direção). */
+function GradeDasTurmas() {
   const eu = useUsuario();
   const { turmas, erro } = useMinhasTurmas();
   const etapas = useEtapas();

@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { EtiquetaForaDoPL } from "@/features/grade/HorariosPL";
 import { Bell, CalendarCheck } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Aviso } from "@/components/Aviso";
@@ -84,7 +85,8 @@ export function NotificacoesPage() {
         {lista.length > 0 && (
           <div className="tv-card" style={{ overflow: "hidden" }}>
             {lista.map((n, i) => {
-              const situacao = n.entrega_id ? entregas.get(n.entrega_id)?.situacao : undefined;
+              const entrega = n.entrega_id ? entregas.get(n.entrega_id) : undefined;
+              const situacao = entrega?.situacao;
               return (
                 <button
                   key={n.id}
@@ -103,6 +105,7 @@ export function NotificacoesPage() {
                     <span style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 3 }}>
                       <span style={{ fontSize: 14, fontWeight: n.lida_em ? 500 : 700, color: C.ink }}>{n.titulo}</span>
                       {situacao && <SituacaoChip situacao={situacao} />}
+                      {entrega?.fora_do_pl && <EtiquetaForaDoPL />}
                     </span>
                     <span style={{ display: "block", fontSize: 13, color: C.inkSoft, lineHeight: 1.5 }}>{n.mensagem}</span>
                     <span style={{ display: "block", fontSize: 12, color: C.inkSoft, marginTop: 3 }}>{formatarData(n.criada_em, true)}</span>

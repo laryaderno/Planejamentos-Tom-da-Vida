@@ -52,6 +52,7 @@ export interface Documento {
   orientacao: "paisagem" | "retrato";
   /** Cabeçalho com o logotipo: título e linhas de informação (ex.: "TURMA: Jardim 1"). */
   titulo: string;
+  /** Sem rótulo (""), o valor sai sozinho, em negrito. */
   informacoes: { rotulo: string; valor: string }[];
   blocos: Bloco[];
   rodape?: string;

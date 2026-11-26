@@ -10,7 +10,7 @@ import { BancoAtividadesPage } from "@/features/banco-atividades/BancoAtividades
 import { PlanejamentoDiaPage } from "@/features/planejamentos/PlanejamentoDiaPage";
 import { PlanejamentosPage } from "@/features/planejamentos/PlanejamentosPage";
 import { PrazosPage } from "@/features/prazos/PrazosPage";
-import { ConteudoPage } from "@/features/relatorios/ConteudoPage";
+import { CronogramaPage } from "@/features/cronograma/CronogramaPage";
 import { GradeHorariaPage } from "@/features/grade/GradeHorariaPage";
 import { MeusHorariosPage } from "@/features/grade/MeusHorariosPage";
 import { NotificacoesPage } from "@/features/notificacoes/NotificacoesPage";
@@ -44,7 +44,8 @@ export const router = createBrowserRouter([
           { path: "notificacoes", element: <NotificacoesPage /> },
           { path: "solicitacoes", element: <Navigate to="/notificacoes" replace /> },
           { path: "prazos", element: <PrazosPage /> },
-          { path: "conteudo", element: <ConteudoPage /> },
+          { path: "cronograma", element: <CronogramaPage /> },
+          { path: "conteudo", element: <Navigate to="/cronograma" replace /> },
           { path: "banco", element: <BancoAtividadesPage /> },
           { path: "auditoria", element: <AuditoriaPage /> },
           { path: "perfil", element: <PerfilPage /> },

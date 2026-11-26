@@ -104,7 +104,7 @@ describe("prazos por etapa", () => {
     await b.rpc(u.secretaria!, "salvar_periodo", { p_id: null, p_inicio: "2026-12-07", p_fim: "2026-12-18", p_prazo: "2026-11-01", p_etapa: F1 });
     await expect(
       b.rpc(u.secretaria!, "salvar_periodo", { p_id: null, p_inicio: "2026-12-09", p_fim: "2026-12-10", p_prazo: "2026-12-01", p_etapa: EI }),
-    ).rejects.toThrow(/desta etapa/);
+    ).rejects.toThrow(/já tem um período de entrega/);
   });
 
   it("a entrega usa só o período da etapa da turma", async () => {
@@ -114,23 +114,12 @@ describe("prazos por etapa", () => {
   });
 });
 
-describe("conteúdo programático", () => {
-  it("inclui os planejamentos excluídos na remoção do professor", async () => {
+describe("remoção de professor com Excluir", () => {
+  it("os planejamentos continuam no banco (relatórios usam o histórico)", async () => {
     await concluir(u.lucas!, JARDIM1, "2026-12-07", INGLES, "Colors", { linguagens_amor: ["tempo_qualidade"] });
     await concluir(u.marina!, JARDIM1, "2026-12-08", POLIVALENTE, "Formas geométricas", { linguagens_amor: ["presentes"] });
     await b.rpc(u.diretor!, "remover_usuario", { p_usuario: u.lucas, p_destino: "excluir" });
-    const r = await linhas<{ disciplina: string; conteudo: string }>(
-      u.coordEI!, "select disciplina, conteudo from public.conteudo_programatico($1, '2026-12-01', '2026-12-31')", [JARDIM1],
-    );
-    expect(r).toEqual([
-      { disciplina: "Inglês", conteudo: "Colors" },
-      { disciplina: "Polivalente (Regente)", conteudo: "Formas geométricas" },
-    ]);
-  });
-
-  it("Coordenação de outra etapa não acessa", async () => {
-    await expect(linhas(u.coordF1!, "select * from public.conteudo_programatico($1, '2026-12-01', '2026-12-31')", [JARDIM1]))
-      .rejects.toThrow(/não tem acesso/);
+    expect(await b.contar("select * from public.blocos where professor_id = $1 and excluido_em is not null", [u.lucas])).toBeGreaterThan(0);
   });
 });
 

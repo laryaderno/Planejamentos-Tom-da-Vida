@@ -1,64 +1,7 @@
-import { INTELIGENCIAS, type Inteligencia } from "@/features/planejamentos/dominio";
-import { celula, nomeDeArquivo, t, type Bloco, type Documento, type Paragrafo } from "./modelo";
+import { celula, nomeDeArquivo, t, type Documento } from "./modelo";
 import { dataModelo } from "./planejamento";
 
 const gerado = (d: Date) => `Escola Tom da Vida — gerado em ${d.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}`;
-
-// ---------------------------------------------------------------------------
-// Conteúdo programático (§6.1)
-// ---------------------------------------------------------------------------
-export interface ItemConteudo {
-  data: string;
-  disciplina: string;
-  professor: string;
-  conteudo: string;
-  objetivos: string;
-  habilidades: Inteligencia[];
-}
-
-export interface DadosConteudo {
-  turma: string;
-  etapa: string;
-  /** Ex.: "Novembro de 2026" ou "Bimestre: setembro e outubro de 2026" */
-  rotuloPeriodo: string;
-  inicio: string;
-  fim: string;
-  itens: ItemConteudo[];
-  geradoEm: Date;
-}
-
-export function montarConteudo(d: DadosConteudo): Documento {
-  const disciplinas = [...new Set(d.itens.map((i) => i.disciplina))].sort((a, b) => a.localeCompare(b));
-  const blocos: Bloco[] = disciplinas.flatMap((disc): Bloco[] => [
-    { tipo: "titulo", texto: disc },
-    {
-      tipo: "tabela",
-      larguras: [11, 39, 50],
-      cabecalho: ["Data", "Conteúdo", "Objetivos de aprendizagem (Habilidades)"],
-      linhas: d.itens
-        .filter((i) => i.disciplina === disc)
-        .map((i) => {
-          const objetivos: Paragrafo[] = [
-            ...(i.habilidades.length ? [[t("Múltiplas inteligências: ", { negrito: true }), t(i.habilidades.map((h) => INTELIGENCIAS[h]).join(", "))]] : []),
-            ...celula(i.objetivos).paragrafos,
-          ];
-          return { celulas: [celula(dataModelo(i.data)), celula(i.conteudo), { paragrafos: objetivos }] };
-        }),
-    },
-  ]);
-  return {
-    nomeArquivo: nomeDeArquivo("Conteudo programatico", d.turma, d.inicio, "a", d.fim),
-    orientacao: "retrato",
-    titulo: "CONTEÚDO PROGRAMÁTICO",
-    informacoes: [
-      { rotulo: "TURMA", valor: d.turma.toUpperCase() },
-      { rotulo: "ETAPA", valor: d.etapa },
-      { rotulo: "PERÍODO", valor: `${d.rotuloPeriodo} (${dataModelo(d.inicio)} a ${dataModelo(d.fim)})` },
-    ],
-    blocos: blocos.length ? blocos : [{ tipo: "texto", paragrafos: [[t("Nenhum conteúdo registrado neste período.", { italico: true })]] }],
-    rodape: gerado(d.geradoEm),
-  };
-}
 
 // ---------------------------------------------------------------------------
 // Relatório de entregas (§9)

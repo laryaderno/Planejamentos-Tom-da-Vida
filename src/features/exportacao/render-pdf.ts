@@ -55,7 +55,7 @@ export async function gerarPdf(doc: Documento, logo: ArrayBuffer | null): Promis
           {
             stack: [
               { text: doc.titulo, bold: true, fontSize: 13, margin: [0, 2, 0, 4] },
-              ...doc.informacoes.map((i) => ({ text: [{ text: `${i.rotulo}: `, bold: true }, { text: i.valor }], fontSize: 9.5 })),
+              ...doc.informacoes.map((i) => ({ text: i.rotulo ? [{ text: `${i.rotulo}: `, bold: true }, { text: i.valor }] : [{ text: i.valor, bold: true }], fontSize: 9.5 })),
             ],
           },
         ],

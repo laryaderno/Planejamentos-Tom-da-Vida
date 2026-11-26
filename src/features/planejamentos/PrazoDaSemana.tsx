@@ -1,10 +1,11 @@
 import { CalendarClock } from "lucide-react";
 import { useUsuario } from "@/features/auth/AuthContext";
-import { useEntregas, usePeriodos } from "@/features/notificacoes/api";
+import { periodoValeParaTurma, useEntregas, usePeriodos } from "@/features/notificacoes/api";
 import { SituacaoChip } from "@/features/notificacoes/SituacaoChip";
 import { formatarData, useVinculos } from "@/lib/consultas";
 import { C } from "@/styles/tokens";
 import { useNomes } from "./api";
+import { EtiquetaForaDoPL } from "@/features/grade/HorariosPL";
 import { EtiquetaAtrasado, situacaoDoProfessor } from "./atraso";
 import { dataCurta, hojeISO } from "./dominio";
 
@@ -17,7 +18,7 @@ export function PrazoDaSemana({ turmaId, etapaId, inicio, fim }: { turmaId: numb
   const periodos = usePeriodos();
   const entregas = useEntregas();
   const vinculos = useVinculos();
-  const periodo = periodos.data?.find((p) => p.inicio <= fim && p.fim >= inicio && (p.etapa_id === null || p.etapa_id === etapaId));
+  const periodo = periodos.data?.find((p) => p.inicio <= fim && p.fim >= inicio && periodoValeParaTurma(p, { id: turmaId, etapa_id: etapaId }));
 
   // Professores esperados: quem tem vínculo com a turma (o professor vê só a si mesmo).
   const professores =
@@ -40,7 +41,7 @@ export function PrazoDaSemana({ turmaId, etapaId, inicio, fim }: { turmaId: numb
     .map((id) => {
       const s = situacaoDoProfessor(periodo, entregas.data, id, turmaId);
       const e = entregas.data?.find((x) => x.periodo_id === periodo.id && x.professor_id === id && x.turma_id === turmaId);
-      return { id, nome: id === eu.id ? "Você" : (nomes.data?.get(id) ?? "…"), s, entregueEm: e?.entregue_em };
+      return { id, nome: id === eu.id ? "Você" : (nomes.data?.get(id) ?? "…"), s, entregueEm: e?.entregue_em, foraDoPL: e?.fora_do_pl === true };
     })
     .sort((a, b) => a.nome.localeCompare(b.nome));
 
@@ -69,6 +70,7 @@ export function PrazoDaSemana({ turmaId, etapaId, inicio, fim }: { turmaId: numb
               <>
                 <SituacaoChip situacao={x.s} />
                 {x.s === "atrasado" && <EtiquetaAtrasado />}
+                {x.foraDoPL && <EtiquetaForaDoPL />}
                 {x.entregueEm && <span>em {formatarData(x.entregueEm, true)}</span>}
               </>
             )}

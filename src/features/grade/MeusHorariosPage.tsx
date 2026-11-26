@@ -9,6 +9,7 @@ import { useDisciplinas, useTurmas } from "@/lib/consultas";
 import { mensagemDeErro } from "@/lib/erros";
 import { C } from "@/styles/tokens";
 import { DIAS_SEMANA, ordenarAulas, useMeusHorarios, vigenteEm } from "./api";
+import { MeuPL } from "./HorariosPL";
 
 /** A semana do professor em todas as turmas, conforme a grade horária. */
 export function MeusHorariosPage() {
@@ -29,16 +30,20 @@ export function MeusHorariosPage() {
 
   if (atuais.length === 0) {
     return (
+      <div>
+      <MeuPL />
       <EmptyState
         icon={Clock}
         title="Você ainda não tem aulas na grade horária."
         description="Quando a coordenação ou a secretaria montar a grade das suas turmas, seus horários aparecem aqui."
       />
+      </div>
     );
   }
 
   return (
     <div>
+      <MeuPL />
       <p style={{ fontSize: 13.5, color: C.inkSoft, margin: "0 0 16px", maxWidth: 620, lineHeight: 1.6 }}>
         Seus horários definidos pela coordenação. Clique numa aula para planejar o dia desta semana.
       </p>

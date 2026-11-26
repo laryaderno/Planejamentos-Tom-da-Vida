@@ -1,24 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { Tabela } from "./modelo";
-import { montarConteudo, montarRelatorio } from "./relatorios";
+import { montarRelatorio } from "./relatorios";
 
 const texto = (c: { paragrafos: { texto: string }[][] }) => c.paragrafos.map((p) => p.map((x) => x.texto).join("")).join(" / ");
-
-describe("conteúdo programático", () => {
-  it("agrupa por disciplina em ordem alfabética, com data, conteúdo e objetivos", () => {
-    const d = montarConteudo({
-      turma: "Jardim 1", etapa: "Educação Infantil", rotuloPeriodo: "Novembro de 2026", inicio: "2026-11-01", fim: "2026-11-30",
-      geradoEm: new Date(),
-      itens: [
-        { data: "2026-11-23", disciplina: "Polivalente (Regente)", professor: "Marina", conteudo: "Cores", objetivos: "Nomear cores", habilidades: ["espacial"] },
-        { data: "2026-11-24", disciplina: "Inglês", professor: "Lucas", conteudo: "Colors", objetivos: "", habilidades: [] },
-      ],
-    });
-    expect(d.blocos.filter((b) => b.tipo === "titulo").map((b) => (b as { texto: string }).texto)).toEqual(["Inglês", "Polivalente (Regente)"]);
-    const tabela = d.blocos[3] as Tabela;
-    expect(tabela.linhas[0]!.celulas.map(texto)).toEqual(["23/11/2026", "Cores", "Múltiplas inteligências: Espacial / Nomear cores"]);
-  });
-});
 
 describe("relatório de entregas", () => {
   it("ordena por professor e soma a linha de total", () => {

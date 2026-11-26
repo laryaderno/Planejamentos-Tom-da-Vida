@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Archive,
   Bell,
-  BookOpen,
+  ClipboardList,
   CalendarCheck,
   CalendarDays,
   Clock,
@@ -35,7 +35,7 @@ export const NAVEGACAO: ItemNavegacao[] = [
   { caminho: "/turmas", rotulo: "Turmas", icone: GraduationCap, papeis: GESTAO },
   { caminho: "/equipe", rotulo: "Equipe", icone: Users, papeis: GESTAO },
   { caminho: "/prazos", rotulo: "Prazos e ciclos", icone: CalendarDays, papeis: ["diretor", "secretaria"] },
-  { caminho: "/conteudo", rotulo: "Conteúdo programático", icone: BookOpen, papeis: GESTAO },
+  { caminho: "/cronograma", rotulo: "Cronograma de Avaliação", icone: ClipboardList, papeis: [...GESTAO, "professor"] },
   { caminho: "/banco", rotulo: "Banco de atividades", icone: Archive, papeis: [...GESTAO, "professor"] },
   { caminho: "/auditoria", rotulo: "Auditoria", icone: ScrollText, papeis: ["administrador"] },
   { caminho: "/perfil", rotulo: "Meu perfil", icone: UserCircle, papeis: [...GESTAO, "professor"] },

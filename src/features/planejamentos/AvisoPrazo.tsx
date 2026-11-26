@@ -3,7 +3,7 @@ import { AlertCircle } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { useUsuario } from "@/features/auth/AuthContext";
-import { useEntregas, usePeriodos, type Entrega, type Periodo } from "@/features/notificacoes/api";
+import { periodoValeParaTurma, useEntregas, usePeriodos, type Entrega, type Periodo } from "@/features/notificacoes/api";
 import { useTurmas, useVinculos, type Turma } from "@/lib/consultas";
 import { verificar } from "@/lib/erros";
 import { supabase } from "@/lib/supabase";
@@ -53,7 +53,7 @@ export function pendenciasDoProfessor(
   const lista: Pendencia[] = [];
   for (const p of periodos) {
     const faltando = turmas
-      .filter((t) => p.etapa_id === null || p.etapa_id === t.etapa_id)
+      .filter((t) => periodoValeParaTurma(p, t))
       .filter((t) => !entregas.some((e) => e.periodo_id === p.id && e.professor_id === professorId && e.turma_id === t.id))
       .map((t) => t.nome);
     if (faltando.length) lista.push({ periodo: p, turmas: faltando });
